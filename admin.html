@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Yönetim Paneli · Ebru Çiçekçilik</title>
+<link rel="icon" href="image/Ebru_cicek_logo.png" type="image/png">
+<style>
+  :root{--cream:#FCF9F4;--ink:#1F2D27;--forest:#2B4A3D;--soft:#566B61;--blush:#F5D3D9;--rose:#B5546B;--sage:#D3E0D6;--line:#E3EAE5;--bad:#B3261E}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--cream);color:var(--ink);font-size:17px;line-height:1.5;padding-bottom:100px}
+  h1,h2,h3{margin:0}
+  button,input,select,textarea{font:inherit;color:inherit}
+  input,select,textarea{width:100%;padding:13px 15px;border:1.5px solid var(--sage);border-radius:12px;background:#fff;font-size:17px}
+  input:focus,select:focus,textarea:focus{outline:3px solid var(--blush);border-color:var(--rose)}
+  textarea{resize:vertical;min-height:90px}
+  label{display:block;font-weight:600;font-size:15px;margin:14px 0 6px}
+  .btn{border:0;border-radius:999px;padding:12px 20px;font-weight:700;cursor:pointer;background:var(--forest);color:#fff;font-size:16px}
+  .btn:active{transform:scale(.97)}
+  .btn.light{background:var(--sage);color:var(--ink)}
+  .btn.pink{background:var(--blush);color:var(--ink)}
+  .btn.danger{background:#fff;color:var(--bad);border:1.5px solid var(--bad)}
+  .btn.small{padding:10px 16px;font-size:15px}
+  .btn[disabled]{opacity:.5;cursor:default}
+  .wrap{max-width:980px;margin:0 auto;padding:0 16px}
+
+  /* giriş */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 8px 30px rgba(43,74,61,.08)}
+  #login .card{width:100%;max-width:420px}
+  #login img{width:84px;height:84px;object-fit:contain;display:block;margin:0 auto 10px}
+  #login h1{text-align:center;font-size:22px}
+  #login p.sub{text-align:center;color:var(--soft);margin:6px 0 10px;font-size:14px}
+  .err{background:#FDECEA;color:var(--bad);border-radius:12px;padding:10px 14px;font-size:14px;margin-top:14px}
+  details{margin-top:14px;font-size:14px;color:var(--soft)}
+  summary{cursor:pointer}
+  .check{display:flex;gap:10px;align-items:center;font-weight:500;margin:14px 0 0}
+  .check input{width:20px;height:20px;padding:0}
+
+  /* üst bar */
+  header{background:var(--forest);color:#fff;position:sticky;top:0;z-index:20}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+  header b{font-size:17px}
+  header button{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:6px 14px;cursor:pointer}
+  nav{display:flex;gap:8px;overflow-x:auto;padding:14px 16px;max-width:980px;margin:0 auto}
+  nav button{white-space:nowrap;border:0;border-radius:999px;padding:12px 20px;font-size:16px;background:#fff;border:1.5px solid var(--sage);font-weight:600;cursor:pointer}
+  nav button.on{background:var(--forest);color:#fff;border-color:var(--forest)}
+
+  /* liste */
+  .row{display:flex;gap:16px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px}
+  .row.off{opacity:.55}
+  .thumb{width:110px;height:138px;border-radius:14px;object-fit:cover;object-position:top;background:var(--blush);flex:none}
+  .sw{width:44px;height:44px;border-radius:50%;border:1px solid #ccc;flex:none}
+  .grow{flex:1;min-width:0}
+  .grow .t{font-weight:700;font-size:18px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .grow .m{font-size:15px;color:var(--soft);margin-top:4px}
+  .price{width:140px;flex:none;position:relative}
+  .price input{padding:12px 14px 12px 30px;font-weight:700;text-align:right;font-size:20px}
+  .price span{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--soft)}
+  .acts{display:flex;flex-direction:column;gap:6px;flex:none}
+  .head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 14px;gap:10px}
+  .head h2{font-size:24px}
+  .group{font-weight:700;color:var(--soft);font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin:20px 0 8px}
+  .zone{border-radius:16px;padding:12px 16px;margin:22px 0 12px;font-size:15px;line-height:1.4}
+  .zone b{display:block;font-size:17px;margin-bottom:2px}
+  .zone.home{background:#E3F0E7;color:var(--forest)}
+  .zone.all{background:var(--blush);color:#6B2A3C}
+  .tag{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px;margin-right:6px}
+  .tag.home{background:#E3F0E7;color:var(--forest)}
+  .tag.all{background:var(--blush);color:#6B2A3C}
+  .tag.off{background:#eee;color:#555}
+  .hint{color:var(--soft);font-size:15px;margin:0 0 14px}
+  .empty{text-align:center;color:var(--soft);padding:30px}
+  @media(max-width:620px){
+    .row{flex-wrap:wrap}
+    .grip{width:32px;min-height:130px}
+    .thumb{width:104px;height:130px}
+    .price{width:100%;order:5}
+    .acts{flex-direction:row;order:4;width:100%}
+    .acts .btn{flex:1}
+  }
+
+  /* alt kaydet çubuğu */
+  #savebar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));z-index:30}
+  #savebar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #state{font-size:15px;color:var(--soft)}
+  #state.dirty{color:var(--rose);font-weight:700}
+  #savebar .btn{padding:14px 28px;font-size:16px}
+
+  dialog{border:0;border-radius:24px;padding:0;width:min(660px,94vw);max-height:92vh;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(31,45,39,.55)}
+  dialog form{padding:22px;overflow:auto;max-height:92vh}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .photo{display:flex;gap:14px;align-items:center;margin-top:6px}
+  .photo img{width:150px;height:188px;border-radius:14px;object-fit:cover;object-position:top;background:var(--blush)}
+  .dlgbtns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .grip{width:38px;align-self:stretch;min-height:110px;border:0;border-radius:12px;background:var(--sage);color:var(--soft);font-size:22px;line-height:1;cursor:grab;touch-action:none;flex:none;display:flex;align-items:center;justify-content:center;letter-spacing:-3px}
+  .grip:active{cursor:grabbing}
+  .row.dragging{position:relative;z-index:25;box-shadow:0 16px 40px rgba(0,0,0,.28);opacity:.96;transition:none;pointer-events:none}
+  .row.drop-before{box-shadow:0 -7px 0 0 var(--rose)}
+  .row.drop-after{box-shadow:0 7px 0 0 var(--rose)}
+  .fl{width:76px;height:76px;flex:none;border-radius:18px;background:linear-gradient(#FCF9F4,#F9E3E8);border:1px solid var(--line);padding:6px}
+  .fl svg{width:100%;height:100%;display:block}
+  .tag.disc{background:#FDE7C8;color:#7A4A00}
+  .btn.green{background:#E3F0E7;color:var(--forest);border:1.5px solid #B9D6C2}
+  .swaplist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .swapitem{display:flex;gap:14px;align-items:center;text-align:left;width:100%;background:#fff;border:1.5px solid var(--sage);border-radius:16px;padding:10px;cursor:pointer}
+  .swapitem:hover{border-color:var(--rose);background:#FFF7F8}
+  .swapitem img{width:60px;height:75px;border-radius:10px;object-fit:cover;object-position:top;flex:none;background:var(--blush)}
+  .swapitem span{font-weight:700;font-size:16px;line-height:1.3}
+  #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;z-index:60;max-width:92vw;text-align:center}
+  .steps{font-size:15px;color:var(--soft);padding-left:20px;margin:8px 0}
+</style>
+</head>
+<body>
+
+<!-- GİRİŞ -->
+<div id="login">
+  <form class="card" id="loginForm" autocomplete="off">
+    <img src="image/Ebru_cicek_logo.png" alt="">
+    <h1>Yönetim Paneli</h1>
+    <p class="sub">Ebru Çiçekçilik</p>
+    <label for="token">Şifre (erişim anahtarı)</label>
+    <input id="token" type="password" placeholder="github_pat_..." required autocomplete="off" spellcheck="false">
+    <label class="check"><input type="checkbox" id="remember" checked> Bu cihazda hatırla</label>
+    <details id="adv">
+      <summary>Gelişmiş: depo adı</summary>
+      <label for="repo">GitHub deposu (kullanıcı/depo)</label>
+      <input id="repo" placeholder="OrkunTarlaci/ebru-cicek" spellcheck="false">
+    </details>
+    <div class="err" id="loginErr" hidden></div>
+    <button class="btn" style="width:100%;margin-top:20px;padding:14px" id="loginBtn">Giriş yap</button>
+  </form>
+</div>
+
+<!-- PANEL -->
+<div id="app" hidden>
+  <header><div class="wrap"><b>🌸 Yönetim Paneli</b><button id="logout">Çıkış</button></div></header>
+  <nav id="tabs"></nav>
+  <main class="wrap" id="view"></main>
+  <div id="savebar"><div class="wrap">
+    <span id="state">Değişiklik yok</span>
+    <button class="btn" id="saveBtn" disabled>Kaydet ve Yayınla</button>
+  </div></div>
+</div>
+
+<!-- ÜRÜN DÜZENLE -->
+<dialog id="dlg">
+  <form method="dialog" id="pform">
+    <h2 id="dlgTitle">Ürün</h2>
+    <label>Ürün adı</label>
+    <input id="f_name" required maxlength="120">
+    <div class="two">
+      <div><label>Fiyat (₺)</label><input id="f_price" type="number" inputmode="numeric" min="0" step="1" required></div>
+      <div><label>Kategori</label><select id="f_cat"></select></div>
+    </div>
+    <div class="two">
+      <div><label>Etiket yazısı</label><input id="f_badge" maxlength="30" placeholder="Örn. Çok Satan"></div>
+      <div><label>Etiket rengi</label><select id="f_color"></select></div>
+    </div>
+    <label>Açıklama</label>
+    <textarea id="f_desc" maxlength="400"></textarea>
+    <label>Fotoğraf</label>
+    <div class="photo">
+      <img id="f_img" alt="">
+      <div><input type="file" id="f_file" accept="image/*"><div class="hint" style="margin:6px 0 0">Fotoğraf otomatik küçültülür.</div></div>
+    </div>
+    <label class="check"><input type="checkbox" id="f_vis"> Sitede göster</label>
+    <div class="dlgbtns">
+      <button type="button" class="btn light" id="f_cancel">Vazgeç</button>
+      <button type="submit" class="btn" id="f_ok">Tamam</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ANA SAYFAYA AL -->
+<dialog id="swapDlg">
+  <div style="padding:22px;overflow:auto;max-height:92vh">
+    <h2 id="swapTitle">Hangisinin yerine geçsin?</h2>
+    <p class="hint" style="margin-top:6px">Ana sayfada en fazla 6 ürün durur. Seçtiğiniz ürün ana sayfadan çıkıp “Tüm Çiçek Modelleri” sayfasına geçer.</p>
+    <div class="swaplist" id="swapList"></div>
+    <div class="dlgbtns"><button type="button" class="btn light" id="swapCancel">Vazgeç</button></div>
+  </div>
+</dialog>
+
+<div id="toast" hidden></div>
+
+<script>
+(function(){
+  'use strict';
+  var CATS = ['Gül Buketleri','Tasarım Buketler','Vazo & Aranjman','Saksı & Vazo','Çikolata & Hediye'];
+  var COLORS = [['bg-blush','Pembe'],['bg-peach','Şeftali'],['bg-lavender','Lavanta'],['bg-sage','Yeşil']];
+  var TABS = [['products','Ürünler'],['flowers','Çiçek Fiyatları'],['extras','Ekstralar'],['settings','Ayarlar']];
+  var DATA_FILE = 'urunler.json';
+  var LS = 'ebru_admin_v1';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var num = function(v){ return Math.max(0, Math.round(Number(v) || 0)); };
+
+  var cfg = { token:'', repo:'' };
+  var data = null, sha = '', pending = {}, dirty = false, tab = 'products', editingId = null, pendingPhoto = null;
+
+  /* ---------- yardımcılar ---------- */
+  function toast(msg, ms){
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.hidden = true; }, ms || 3000);
+  }
+  function detectRepo(){
+    var h = location.hostname;
+    if (/\.github\.io$/.test(h)) {
+      var owner = h.split('.')[0];
+      var repo = location.pathname.split('/')[1];
+      if (!repo || /\.html?$/.test(repo)) repo = owner + '.github.io';
+      return owner + '/' + repo;
+    }
+    return '';
+  }
+  function slug(s){
+    var m = {'ç':'c','ğ':'g','ı':'i','ö':'o','ş':'s','ü':'u','Ç':'c','Ğ':'g','İ':'i','I':'i','Ö':'o','Ş':'s','Ü':'u'};
+    return String(s).replace(/[çğıöşüÇĞİIÖŞÜ]/g, function(c){ return m[c]; }).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'urun';
+  }
+  function b64FromText(str){
+    var bytes = new TextEncoder().encode(str), bin = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+  function textFromB64(b64){
+    var bin = atob(b64.replace(/\s/g,'')), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  function api(path, opts){
+    opts = opts || {};
+    var url = 'https://api.github.com/repos/' + cfg.repo + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
+    return fetch(url, {
+      method: opts.method || 'GET',
+      cache: 'no-store',
+      headers: { 'Authorization':'Bearer ' + cfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+  }
+  function errText(status){
+    if (status === 401) return 'Şifre (erişim anahtarı) yanlış veya süresi dolmuş.';
+    if (status === 403) return 'Bu anahtarın yazma izni yok. Contents izni "Read and write" olmalı.';
+    if (status === 404) return 'Depo bulunamadı. Depo adını kontrol edin veya anahtarın bu depoya izni olduğundan emin olun.';
+    if (status === 409 || status === 422) return 'Dosya başka yerden değişmiş. Sayfayı yenileyip tekrar giriş yapın.';
+    return 'Beklenmeyen hata (' + status + '). İnternetinizi kontrol edip tekrar deneyin.';
+  }
+
+  /* ---------- giriş ---------- */
+  function showLoginErr(msg){ var e = $('loginErr'); e.textContent = msg; e.hidden = !msg; }
+
+  async function login(token, repo, remember){
+    cfg.token = token.trim(); cfg.repo = repo.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');
+    if (!/^[\w.-]+\/[\w.-]+$/.test(cfg.repo)) { $('adv').open = true; throw new Error('Depo adını "kullanıcı/depo" biçiminde yazın.'); }
+    var res;
+    try { res = await api(DATA_FILE); } catch(e){ throw new Error('GitHub\'a bağlanılamadı. İnternetinizi kontrol edin.'); }
+    if (!res.ok) throw new Error(errText(res.status));
+    var j = await res.json();
+    var text;
+    if (j.content) text = textFromB64(j.content);
+    else { /* 1 MB üstü dosyalar için */
+      var r2 = await fetch(j.download_url, { cache:'no-store' }); text = await r2.text();
+    }
+    data = JSON.parse(text); sha = j.sha;
+    ['products','flowers','extras'].forEach(function(k){ if (!Array.isArray(data[k])) data[k] = []; });
+    if (data.wrapFee == null) data.wrapFee = 120;
+    delete data.models;
+    try {
+      if (remember) localStorage.setItem(LS, JSON.stringify({ token:cfg.token, repo:cfg.repo }));
+      else localStorage.removeItem(LS);
+    } catch(e){}
+    $('login').hidden = true; $('app').hidden = false;
+    renderTabs(); render(); setDirty(false);
+  }
+
+  $('loginForm').addEventListener('submit', async function(e){
+    e.preventDefault(); showLoginErr('');
+    var btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Kontrol ediliyor...';
+    try { await login($('token').value, $('repo').value, $('remember').checked); }
+    catch(err){ showLoginErr(err.message); }
+    btn.disabled = false; btn.textContent = 'Giriş yap';
+  });
+
+  $('logout').addEventListener('click', function(){
+    if (dirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de çıkılsın mı?')) return;
+    try { localStorage.removeItem(LS); } catch(e){}
+    dirty = false; location.reload();
+  });
+
+  /* ---------- kaydet ---------- */
+  function setDirty(v){
+    dirty = v;
+    var s = $('state'); s.textContent = v ? 'Kaydedilmemiş değişiklikler var' : 'Değişiklik yok'; s.className = v ? 'dirty' : '';
+    $('saveBtn').disabled = !v;
+  }
+  function touch(){ setDirty(true); }
+  window.addEventListener('beforeunload', function(e){ if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  $('saveBtn').addEventListener('click', async function(){
+    var btn = this; btn.disabled = true; var old = btn.textContent;
+    try {
+      var paths = Object.keys(pending);
+      for (var i = 0; i < paths.length; i++) {
+        btn.textContent = 'Fotoğraf yükleniyor ' + (i + 1) + '/' + paths.length + '...';
+        var p = paths[i];
+        var r = await api(p, { method:'PUT', body:{ message:'Yönetim paneli: fotoğraf ekle', content: pending[p].split(',')[1] } });
+        if (!r.ok) throw new Error(errText(r.status));
+        delete pending[p];
+      }
+      btn.textContent = 'Kaydediliyor...';
+      var body = { message:'Yönetim paneli: ürünler güncellendi', content: b64FromText(JSON.stringify(data, null, 2) + '\n'), sha: sha };
+      var res = await api(DATA_FILE, { method:'PUT', body: body });
+      if (!res.ok) throw new Error(errText(res.status));
+      var j = await res.json(); sha = j.content.sha;
+      setDirty(false);
+      toast('Kaydedildi ✓ Sitede görünmesi 1-2 dakika sürebilir.', 5000);
+    } catch(err){
+      toast(err.message, 6000); btn.disabled = false;
+    }
+    btn.textContent = old;
+    if (dirty) btn.disabled = false;
+  });
+
+  /* ---------- çiçek çizimleri (sitedekiyle aynı) ---------- */
+  function mixHex(a, b, t) {
+      const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+      const ch = sh => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t);
+      return '#' + [16, 8, 0].map(sh => ch(sh).toString(16).padStart(2, '0')).join('');
+  }
+
+  function flowerSvg(f, x, y) {
+      const st = '#1F2D27';
+      const a = ' stroke="' + st + '" stroke-width="1.1"';
+      const g0 = '<g transform="translate(' + x + ',' + y + ')">';
+      const rot = (n, fn) => { let o = ''; for (let k = 0; k < n; k++) o += '<g transform="rotate(' + (k * 360 / n) + ')">' + fn(k) + '</g>'; return o; };
+      switch (f.shape) {
+          case 'rose': {
+              const mid = mixHex(f.color, f.center, .3), deep = mixHex(f.color, f.center, .7);
+              return g0 +
+                  rot(5, () => '<circle cx="0" cy="-11" r="10" fill="' + f.color + '"' + a + '/>') +
+                  '<g transform="rotate(36)">' + rot(5, () => '<circle cx="0" cy="-6.5" r="8" fill="' + mid + '"' + a + '/>') + '</g>' +
+                  '<circle r="7" fill="' + deep + '"' + a + '/>' +
+                  '<path d="M0,-1.5 C3,-2.5 4.6,1 2,3.4 C-1,5.6 -5.2,2 -3.8,-2 C-2.6,-5.4 2.6,-6 4.8,-2.6" fill="none" stroke="' + st + '" stroke-width="1" stroke-linecap="round"/></g>';
+          }
+          case 'peony': {
+              const mid = mixHex(f.color, f.center, .35), deep = mixHex(f.color, f.center, .8);
+              return g0 +
+                  rot(7, () => '<circle cx="0" cy="-11" r="8.5" fill="' + f.color + '"' + a + '/>') +
+                  '<g transform="rotate(26)">' + rot(7, () => '<circle cx="0" cy="-7" r="6.8" fill="' + mid + '"' + a + '/>') + '</g>' +
+                  rot(6, () => '<circle cx="0" cy="-3.6" r="4.6" fill="' + deep + '"' + a + '/>') +
+                  '<circle r="2.6" fill="' + f.center + '"' + a + '/></g>';
+          }
+          case 'carn': {
+              const mid = mixHex(f.color, f.center, .4);
+              return g0 +
+                  rot(9, () => '<circle cx="0" cy="-11" r="6" fill="' + f.color + '"' + a + '/>') +
+                  '<g transform="rotate(20)">' + rot(9, () => '<circle cx="0" cy="-6" r="4.8" fill="' + mid + '"' + a + '/>') + '</g>' +
+                  '<circle r="4" fill="' + f.center + '"' + a + '/></g>';
+          }
+          case 'lavender': {
+              const alt = mixHex(f.color, f.center, .55);
+              const ys = [9, 4, -1, -6, -11, -16], rs = [3.6, 3.6, 3.4, 3.1, 2.7, 2.3];
+              let o = g0 + '<g transform="translate(0,2)"><path d="M0,16 L0,-18" stroke="#6B8E78" stroke-width="1.6" stroke-linecap="round"/>';
+              ys.forEach((yy, k) => {
+                  o += '<ellipse cx="-3.3" cy="' + yy + '" rx="2.3" ry="' + rs[k] + '" transform="rotate(-28 -3.3 ' + yy + ')" fill="' + (k % 2 ? f.color : alt) + '"' + a + '/>' +
+                       '<ellipse cx="3.3" cy="' + yy + '" rx="2.3" ry="' + rs[k] + '" transform="rotate(28 3.3 ' + yy + ')" fill="' + (k % 2 ? alt : f.color) + '"' + a + '/>';
+              });
+              return o + '<ellipse cx="0" cy="-21" rx="2" ry="3.2" fill="' + f.color + '"' + a + '/></g></g>';
+          }
+          case 'wheat': {
+              const ys = [8, 3, -2, -7, -12];
+              let o = g0 + '<g transform="translate(0,3)"><path d="M0,16 L0,-14" stroke="#9C7A4A" stroke-width="1.4" stroke-linecap="round"/>';
+              ys.forEach(yy => {
+                  o += '<ellipse cx="-3.4" cy="' + yy + '" rx="2" ry="4.2" transform="rotate(-32 -3.4 ' + yy + ')" fill="' + f.color + '"' + a + '/>' +
+                       '<ellipse cx="3.4" cy="' + yy + '" rx="2" ry="4.2" transform="rotate(32 3.4 ' + yy + ')" fill="' + f.color + '"' + a + '/>';
+              });
+              o += '<ellipse cx="0" cy="-17" rx="2" ry="4.4" fill="' + f.color + '"' + a + '/>';
+              [-1, 0, 1].forEach(d => { o += '<path d="M' + (d * 1.2) + ',-21 L' + (d * 3.5) + ',-30" stroke="' + f.center + '" stroke-width=".9" stroke-linecap="round"/>'; });
+              return o + '</g></g>';
+          }
+          case 'freesia': {
+              const fl = (cx, cy, sc) => '<g transform="translate(' + cx + ',' + cy + ') scale(' + sc + ')">' +
+                  rot(5, () => '<ellipse cx="0" cy="-5" rx="3" ry="5.4" fill="' + f.color + '"' + a + '/>') + '<circle r="2" fill="' + f.center + '"/></g>';
+              return g0 + '<path d="M2,18 C4,6 -2,-4 -6,-12" fill="none" stroke="#6B8E78" stroke-width="1.6" stroke-linecap="round"/>' +
+                  fl(-7, -13, 1) + fl(5, -3, 1.05) + fl(-3, 8, 1.1) + '</g>';
+          }
+          case 'spike':
+              return g0 + '<g transform="translate(0,3) scale(1.25)"><ellipse cx="0" cy="-12" rx="5" ry="9" fill="' + f.color + '"' + a + '/><ellipse cx="-5" cy="-2" rx="4" ry="7" fill="' + f.color + '"' + a + '/><ellipse cx="5" cy="-2" rx="4" ry="7" fill="' + f.color + '"' + a + '/></g></g>';
+          case 'leaf':
+              return g0 + '<g transform="scale(1.2)"><circle cx="-7" cy="-5" r="8" fill="' + f.color + '"' + a + '/><circle cx="7" cy="3" r="8" fill="' + f.center + '"' + a + '/></g></g>';
+          case 'blade':
+              return g0 + '<ellipse cx="0" cy="-4" rx="8" ry="15" fill="' + f.color + '"' + a + '/><path d="M0,-18 L0,10" stroke="' + f.center + '" stroke-width="1.4"/></g>';
+          case 'daisy':
+              return g0 + rot(10, () => '<ellipse cx="0" cy="-10" rx="3.6" ry="8" fill="' + f.color + '"' + a + '/>') + '<circle r="6" fill="' + f.center + '"' + a + '/></g>';
+          case 'sun':
+              return g0 + rot(12, () => '<ellipse cx="0" cy="-12" rx="3.2" ry="8" fill="' + f.color + '"' + a + '/>') + '<circle r="8.5" fill="' + f.center + '"' + a + '/></g>';
+          case 'ball':
+              return g0 + '<circle r="11" fill="' + f.color + '"' + a + '/>' + [[-4,-4],[4,-5],[0,1],[-6,5],[6,4],[1,-9],[-1,8]].map(d => '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="2.6" fill="' + f.center + '" opacity=".85"/>').join('') + '</g>';
+          case 'tulip':
+              return g0 + '<g transform="translate(0,1) scale(1.4)"><path d="M-10,-4 C-11,-17 -4,-19 0,-10 C4,-19 11,-17 10,-4 C10,8 -10,8 -10,-4Z" fill="' + f.color + '"' + a + ' stroke-linejoin="round"/><path d="M0,-10 C-3,-3 -3,3 0,6 C3,3 3,-3 0,-10Z" fill="' + f.center + '" opacity=".55"/></g></g>';
+          case 'lily':
+              return g0 + rot(6, () => '<ellipse cx="0" cy="-9" rx="4.6" ry="10" fill="' + f.color + '"' + a + '/>') + '<circle r="3.4" fill="' + f.center + '"' + a + '/></g>';
+          default:
+              return g0 +
+                  '<circle cx="-8" cy="-6" r="11" fill="' + f.color + '" stroke="' + st + '" stroke-width="1.2"/>' +
+                  '<circle cx="8" cy="-6" r="11" fill="' + f.color + '" stroke="' + st + '" stroke-width="1.2"/>' +
+                  '<circle cx="-6" cy="7" r="11" fill="' + f.color + '" stroke="' + st + '" stroke-width="1.2"/>' +
+                  '<circle cx="6" cy="7" r="11" fill="' + f.color + '" stroke="' + st + '" stroke-width="1.2"/>' +
+                  '<circle cx="0" cy="0" r="8" fill="' + f.center + '" stroke="' + st + '" stroke-width="1"/></g>';
+      }
+  }
+
+
+  function flowerSwatchSvg(f) {
+    return '<svg viewBox="-24 -24 48 48" aria-hidden="true">' + flowerSvg(f, 0, 0) + '</svg>';
+  }
+
+  /* ---------- sekmeler ---------- */
+  function renderTabs(){
+    $('tabs').innerHTML = TABS.map(function(t){ return '<button data-tab="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + '</button>'; }).join('');
+  }
+  $('tabs').addEventListener('click', function(e){
+    var b = e.target.closest('[data-tab]'); if (!b) return;
+    tab = b.dataset.tab; renderTabs(); render(); window.scrollTo(0,0);
+  });
+
+  function render(){
+    var v = $('view');
+    if (tab === 'products') v.innerHTML = viewProducts();
+    else if (tab === 'flowers') v.innerHTML = viewFlowers();
+    else if (tab === 'extras') v.innerHTML = viewSimple();
+    else v.innerHTML = viewSettings();
+  }
+
+  function photoSrc(p){ return pending[p.image] || p.image || ''; }
+
+  var HOME_MAX = 6;
+  function discPct(x){
+    var o = Number(x.oldPrice), n = Number(x.price);
+    if (!(o > 0) || !(n >= 0) || n >= o) return 0;
+    return Math.max(1, Math.round((1 - n / o) * 100));
+  }
+  function homeIds(){
+    return data.products.filter(function(p){ return p.visible !== false; }).slice(0, HOME_MAX).map(function(p){ return String(p.id); });
+  }
+  function viewProducts(){
+    var h = '<div class="head"><h2>Ürünler</h2><button class="btn" data-act="add">+ Yeni ürün</button></div>';
+    h += '<p class="hint">Listedeki <b>ilk 6 görünür ürün ana sayfada</b> çıkar, diğerleri <b>Tüm Çiçek Modelleri</b> sayfasında yer alır. Ürünü soldaki <b>⋮⋮</b> tutamacından tutup istediğiniz yere sürükleyin, ya da <b>🏠 Ana sayfaya al</b> düğmesini kullanın. Bittikten sonra <b>Kaydet ve Yayınla</b>’ya basın.</p>';
+    if (!data.products.length) h += '<div class="empty">Henüz ürün yok.</div>';
+    var seen = 0, shownHome = false, shownAll = false;
+    data.products.forEach(function(p, i){
+      var hidden = p.visible === false, zone = '', onHome = false;
+      if (!hidden) {
+        seen++; onHome = seen <= HOME_MAX;
+        if (onHome && !shownHome) { shownHome = true; zone = '<div class="zone home"><b>🏠 Ana sayfada görünenler</b>Listedeki ilk ' + HOME_MAX + ' ürün. Buraya sürüklediğiniz ürün ana sayfaya çıkar, en alttaki aşağı kayar.</div>'; }
+        if (!onHome && !shownAll) { shownAll = true; zone = '<div class="zone all"><b>📚 Sadece “Tüm Çiçek Modelleri” sayfasında</b>Yeni eklediğiniz ürünler buraya düşer. Ana sayfaya almak için yukarı sürükleyin veya “Ana sayfaya al”a basın.</div>'; }
+      }
+      var d = discPct(p);
+      var tag = hidden ? '<span class="tag off">Gizli</span>' : (onHome ? '<span class="tag home">Ana sayfa</span>' : '<span class="tag all">Tüm modeller</span>');
+      if (d) tag += '<span class="tag disc">%' + d + ' indirimli</span>';
+      h += zone + '<div class="row' + (hidden ? ' off' : '') + '" data-id="' + esc(p.id) + '">' +
+        '<button class="grip" data-grip aria-label="Tutup sürükleyin" title="Tutup sürükleyin">⋮⋮</button>' +
+        '<img class="thumb" src="' + esc(photoSrc(p)) + '" alt="">' +
+        '<div class="grow"><div class="t">' + esc(p.name) + '</div><div class="m">' + tag + esc(p.category) + (d ? '<br>Eski fiyat: ₺' + num(p.oldPrice) : '') + '</div></div>' +
+        '<div class="price"><span>₺</span><input type="number" inputmode="numeric" min="0" step="1" value="' + num(p.price) + '" data-price="products" aria-label="Fiyat"></div>' +
+        '<div class="acts">' +
+          '<button class="btn light small" data-act="edit">Düzenle</button>' +
+          ((!hidden && !onHome) ? '<button class="btn green small" data-act="tohome">🏠 Ana sayfaya al</button>' : '') +
+          (d ? '<button class="btn danger small" data-act="undisc">İndirimi kaldır</button>' : '') +
+          '<div style="display:flex;gap:6px"><button class="btn pink small" data-act="up"' + (i === 0 ? ' disabled' : '') + ' aria-label="Yukarı">↑</button>' +
+          '<button class="btn pink small" data-act="down"' + (i === data.products.length - 1 ? ' disabled' : '') + ' aria-label="Aşağı">↓</button></div>' +
+        '</div></div>';
+    });
+    return h;
+  }
+
+  function viewSimple(){
+    var h = '<div class="head"><h2>Ekstralar</h2><button class="btn" data-act="addExtra">+ Yeni ekstra</button></div>' +
+      '<p class="hint">“Kendi buketini tasarla” bölümünde müşterinin buketine ekleyebildiği hediyeler (çikolata, peluş, balon…). Eklediğiniz ekstra sitede hemen görünür.</p>';
+    if (!data.extras.length) h += '<div class="empty">Henüz ekstra yok. “+ Yeni ekstra” ile ekleyin.</div>';
+    data.extras.forEach(function(it){
+      var d = discPct(it);
+      h += '<div class="row" data-id="' + esc(it.id) + '" data-key="extras" style="flex-wrap:wrap">' +
+        '<div class="grow" style="min-width:220px"><label style="margin:0 0 4px">Ekstra adı</label><input value="' + esc(it.name) + '" data-name="extras" aria-label="Ad" maxlength="60" style="font-weight:700">' +
+        '<label style="margin:10px 0 4px">Kısa açıklama</label><input value="' + esc(it.desc || '') + '" data-desc="extras" aria-label="Açıklama" maxlength="60" placeholder="Örn. Butik kutu içinde">' +
+        (d ? '<div class="m"><span class="tag disc">%' + d + ' indirimli</span>Eski fiyat: ₺' + num(it.oldPrice) + '</div>' : '') + '</div>' +
+        '<div class="price"><span>₺</span><input type="number" inputmode="numeric" min="0" step="1" value="' + num(it.price) + '" data-price="extras" aria-label="Fiyat"></div>' +
+        '<div class="acts"><button class="btn danger small" data-act="del" data-key="extras">Sil</button></div>' +
+        '</div>';
+    });
+    return h;
+  }
+
+  function viewFlowers(){
+    var h = '<div class="head"><h2>Çiçek Fiyatları</h2></div><p class="hint">Buket tasarlayıcıdaki çiçeklerin tanesi fiyatı. Her çiçeğin yanındaki çizim, sitede göründüğü haliyle o çiçeğin modelidir. Müşteri istediği kadar çiçek ekleyebilir.</p>';
+    var last = '';
+    var order = []; data.flowers.forEach(function(f){ if (order.indexOf(f.cat) < 0) order.push(f.cat); });
+    var sorted = []; order.forEach(function(c){ data.flowers.forEach(function(f){ if (f.cat === c) sorted.push(f); }); });
+    sorted.forEach(function(f){
+      if (f.cat !== last) { last = f.cat; h += '<div class="group">' + esc(last) + '</div>'; }
+      h += '<div class="row" data-id="' + esc(f.id) + '" data-key="flowers">' +
+        '<span class="fl">' + flowerSwatchSvg(f) + '</span>' +
+        '<div class="grow"><input value="' + esc(f.name) + '" data-name="flowers" aria-label="Ad" style="font-weight:600">' +
+        (discPct(f) ? '<div class="m"><span class="tag disc">%' + discPct(f) + ' indirimli</span>Eski fiyat: ₺' + num(f.oldPrice) + '</div>' : '') + '</div>' +
+        '<div class="price"><span>₺</span><input type="number" inputmode="numeric" min="0" step="1" value="' + num(f.price) + '" data-price="flowers" aria-label="Fiyat"></div></div>';
+    });
+    return h;
+  }
+
+  function viewSettings(){
+    return '<div class="head"><h2>Ayarlar</h2></div>' +
+      '<div class="card" style="margin-bottom:16px"><h3>Ambalaj ve işçilik ücreti</h3>' +
+      '<p class="hint" style="margin-top:6px">Kendi buketini tasarla bölümünde her buketin fiyatına eklenir.</p>' +
+      '<div class="price" style="width:160px"><span>₺</span><input type="number" inputmode="numeric" min="0" step="1" id="wrapFee" value="' + num(data.wrapFee) + '"></div></div>' +
+      '<div class="card" style="margin-bottom:16px"><h3>Toplu zam / indirim</h3>' +
+      '<p class="hint" style="margin-top:6px">Ürünler, çiçekler ve ekstraların tüm fiyatlarına yüzde uygular (5 ₺’ye yuvarlanır). <b>İndirim</b> yaparsanız sitede ürün kartlarında büyük bir indirim baloncuğu (örn. %20) ve üstü çizili eski fiyat görünür. <b>Zam</b> yaparsanız sitede hiçbir uyarı çıkmaz ve varsa eski indirimler silinir.</p>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="price" style="width:130px"><span>%</span><input type="number" id="pct" min="1" max="200" value="10"></div>' +
+      '<button class="btn" data-act="raise">Zam yap</button><button class="btn light" data-act="cut">İndirim yap</button></div>' +
+      '<div style="margin-top:14px"><button class="btn danger small" data-act="undoall">Tüm indirimleri kaldır (fiyatlar eski haline döner)</button></div></div>' +
+      '<div class="card"><h3>Bilgi</h3><ul class="steps"><li>Kaydet’e bastıktan sonra site 1-2 dakika içinde güncellenir.</li>' +
+      '<li>Fotoğraflar sitenin <b>image</b> klasörüne yüklenir.</li>' +
+      '<li>Ortak bilgisayarda işiniz bitince <b>Çıkış</b> yapın.</li></ul></div>';
+  }
+
+  /* ---------- liste olayları ---------- */
+  function find(key, id){ return data[key].find(function(x){ return String(x.id) === String(id); }); }
+
+  $('view').addEventListener('input', function(e){
+    var el = e.target;
+    if (el.id === 'wrapFee') { data.wrapFee = num(el.value); touch(); return; }
+    var row = el.closest('.row'); if (!row) return;
+    var key = el.dataset.price || el.dataset.name || el.dataset.desc; if (!key) return;
+    var it = find(key, row.dataset.id); if (!it) return;
+    if (el.dataset.price) { it.price = num(el.value); if (it.oldPrice && it.price >= it.oldPrice) delete it.oldPrice; }
+    else if (el.dataset.desc) it.desc = el.value;
+    else it.name = el.value;
+    touch();
+  });
+
+  $('view').addEventListener('click', function(e){
+    var b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    var act = b.dataset.act, row = b.closest('.row'), id = row && row.dataset.id;
+    if (act === 'add') return openForm(null);
+    if (act === 'addExtra') {
+      data.extras.push({ id:'e' + Date.now().toString(36), name:'Yeni ekstra', price:0, desc:'' });
+      touch(); render(); window.scrollTo(0, document.body.scrollHeight);
+      var ins = document.querySelectorAll('#view [data-name="extras"]'), last = ins[ins.length - 1];
+      if (last) { last.focus(); last.select(); }
+      return toast('Yeni ekstra eklendi. Adını ve fiyatını yazın.');
+    }
+    if (act === 'tohome') return openSwap(id);
+    if (act === 'undisc') {
+      var pp = find('products', id); if (!pp) return;
+      if (pp.oldPrice > pp.price) pp.price = num(pp.oldPrice);
+      delete pp.oldPrice; touch(); render(); return toast('İndirim kaldırıldı, fiyat eski haline döndü.');
+    }
+    if (act === 'undoall') {
+      if (!confirm('Tüm indirimler kaldırılsın mı? Fiyatlar indirimden önceki haline döner.')) return;
+      var n = 0;
+      ['products','flowers','extras'].forEach(function(k){ data[k].forEach(function(x){
+        if (x.oldPrice) { if (x.oldPrice > x.price) { x.price = num(x.oldPrice); n++; } delete x.oldPrice; }
+      }); });
+      touch(); return toast(n ? 'İndirimler kaldırıldı. Kaydetmeyi unutmayın.' : 'Kaldırılacak indirim yoktu.');
+    }
+    if (act === 'edit') return openForm(id);
+    if (act === 'up' || act === 'down') {
+      var arr = data.products, i = arr.findIndex(function(x){ return String(x.id) === id; }), j = act === 'up' ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= arr.length) return;
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t; touch(); render(); return;
+    }
+    if (act === 'del') {
+      var key = b.dataset.key, it = find(key, id);
+      if (it && confirm('“' + it.name + '” silinsin mi?')) { data[key] = data[key].filter(function(x){ return x !== it; }); touch(); render(); }
+      return;
+    }
+    if (act === 'raise' || act === 'cut') {
+      var pct = Number($('pct').value);
+      if (!(pct > 0)) return toast('Geçerli bir yüzde yazın.');
+      var f = 1 + (act === 'raise' ? 1 : -1) * pct / 100;
+      if (!confirm('Tüm fiyatlara %' + pct + (act === 'raise' ? ' zam' : ' indirim') + ' uygulansın mı?')) return;
+      ['products','flowers','extras'].forEach(function(k){
+        data[k].forEach(function(x){
+          var np = Math.max(0, Math.round(num(x.price) * f / 5) * 5);
+          if (act === 'raise') { delete x.oldPrice; }
+          else {
+            var base = x.oldPrice > 0 ? x.oldPrice : num(x.price);
+            if (np < base) x.oldPrice = base; else delete x.oldPrice;
+          }
+          x.price = np;
+        });
+      });
+      touch(); render();
+      toast(act === 'cut' ? 'İndirim uygulandı. Sitede indirim baloncuğu çıkacak. Kaydetmeyi unutmayın.' : 'Fiyatlar güncellendi. Kaydetmeyi unutmayın.');
+    }
+  });
+
+  /* ---------- sürükle-bırak sıralama ---------- */
+  var drag = null;
+  function moveInfo(before){
+    var after = homeIds();
+    var joined = after.filter(function(i){ return before.indexOf(i) < 0; });
+    var left = before.filter(function(i){ return after.indexOf(i) < 0; });
+    if (!joined.length) return 'Sıra değiştirildi.';
+    var nm = function(i){ var x = find('products', i); return x ? '“' + x.name + '”' : ''; };
+    return nm(joined[0]) + ' ana sayfaya alındı' + (left.length ? '; ' + nm(left[0]) + ' “Tüm Çiçek Modelleri” sayfasına geçti.' : '.');
+  }
+  function dropTarget(y){
+    var rows = [].slice.call(document.querySelectorAll('#view .row[data-id]')).filter(function(r){ return r !== drag.row; });
+    for (var i = 0; i < rows.length; i++) {
+      var rc = rows[i].getBoundingClientRect();
+      if (y < rc.top + rc.height / 2) return { id: rows[i].dataset.id, el: rows[i], cls: 'drop-before' };
+    }
+    return { id: null, el: rows[rows.length - 1], cls: 'drop-after' };
+  }
+  function dragTick(){
+    if (!drag) return;
+    var y = drag.y;
+    if (y < 110) window.scrollBy(0, -16); else if (y > window.innerHeight - 150) window.scrollBy(0, 16);
+    drag.row.style.transform = 'translateY(' + ((y - drag.startY) + (window.scrollY - drag.startScroll)) + 'px)';
+    var t = dropTarget(y);
+    if (drag.t && drag.t.el) drag.t.el.classList.remove('drop-before', 'drop-after');
+    if (t.el) t.el.classList.add(t.cls);
+    drag.t = t;
+    drag.raf = requestAnimationFrame(dragTick);
+  }
+  $('view').addEventListener('pointerdown', function(e){
+    var g = e.target.closest('[data-grip]'); if (!g || e.button > 0) return;
+    e.preventDefault();
+    var row = g.closest('.row');
+    drag = { id: row.dataset.id, row: row, y: e.clientY, startY: e.clientY, startScroll: window.scrollY, t: null };
+    row.classList.add('dragging');
+    drag.raf = requestAnimationFrame(dragTick);
+  });
+  document.addEventListener('pointermove', function(e){ if (drag) { drag.y = e.clientY; e.preventDefault(); } }, { passive:false });
+  function endDrag(cancel){
+    if (!drag) return;
+    cancelAnimationFrame(drag.raf);
+    var d = drag; drag = null;
+    d.row.classList.remove('dragging'); d.row.style.transform = '';
+    if (d.t && d.t.el) d.t.el.classList.remove('drop-before', 'drop-after');
+    if (cancel || !d.t) return;
+    var arr = data.products, item = find('products', d.id), before = homeIds(), oldIdx = arr.indexOf(item);
+    arr.splice(oldIdx, 1);
+    var idx = d.t.id ? arr.findIndex(function(x){ return String(x.id) === d.t.id; }) : arr.length;
+    arr.splice(idx, 0, item);
+    if (arr.indexOf(item) === oldIdx) return;
+    touch(); render(); toast(moveInfo(before), 4500);
+  }
+  document.addEventListener('pointerup', function(){ endDrag(false); });
+  document.addEventListener('pointercancel', function(){ endDrag(true); });
+
+  /* ---------- "Ana sayfaya al" ---------- */
+  var swapId = null;
+  function openSwap(id){
+    var p = find('products', id); if (!p) return;
+    swapId = id;
+    $('swapTitle').textContent = '“' + p.name + '” hangisinin yerine geçsin?';
+    $('swapList').innerHTML = homeIds().map(function(hid){
+      var x = find('products', hid);
+      return '<button type="button" class="swapitem" data-swap="' + esc(hid) + '"><img src="' + esc(photoSrc(x)) + '" alt=""><span>' + esc(x.name) + '</span></button>';
+    }).join('');
+    $('swapDlg').showModal();
+  }
+  $('swapList').addEventListener('click', function(e){
+    var b = e.target.closest('[data-swap]'); if (!b) return;
+    var arr = data.products, a = find('products', swapId), o = find('products', b.dataset.swap);
+    var i = arr.indexOf(a), j = arr.indexOf(o);
+    arr[i] = o; arr[j] = a;
+    $('swapDlg').close(); touch(); render();
+    toast('“' + a.name + '” ana sayfaya alındı; “' + o.name + '” “Tüm Çiçek Modelleri” sayfasına geçti.', 4500);
+  });
+  $('swapCancel').addEventListener('click', function(){ $('swapDlg').close(); });
+
+  /* ---------- ürün formu ---------- */
+  function fillCats(extra){
+    var list = CATS.slice();
+    data.products.concat(extra ? [{category:extra}] : []).forEach(function(p){ if (p.category && list.indexOf(p.category) < 0) list.push(p.category); });
+    $('f_cat').innerHTML = list.map(function(c){ return '<option>' + esc(c) + '</option>'; }).join('');
+  }
+  $('f_color').innerHTML = COLORS.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('');
+
+  function openForm(id){
+    editingId = id; pendingPhoto = null; $('f_file').value = '';
+    var p = id ? find('products', id) : { name:'', price:'', category:CATS[0], badge:'', badgeColor:'bg-blush', description:'', image:'', visible:true };
+    fillCats(p.category);
+    $('dlgTitle').textContent = id ? 'Ürünü düzenle' : 'Yeni ürün';
+    $('f_name').value = p.name; $('f_price').value = p.price; $('f_cat').value = p.category;
+    $('f_badge').value = p.badge || ''; $('f_color').value = p.badgeColor || 'bg-blush';
+    $('f_desc').value = p.description || ''; $('f_vis').checked = p.visible !== false;
+    $('f_img').src = id ? photoSrc(p) : '';
+    $('dlg').showModal();
+  }
+  $('f_cancel').addEventListener('click', function(){ $('dlg').close(); });
+
+  function resizeImage(file){
+    return new Promise(function(res, rej){
+      var img = new Image(), u = URL.createObjectURL(file);
+      img.onload = function(){
+        var s = Math.min(1, 1000 / Math.max(img.width, img.height));
+        var w = Math.round(img.width * s), h = Math.round(img.height * s);
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = function(){ URL.revokeObjectURL(u); rej(new Error('Bu dosya fotoğraf olarak açılamadı.')); };
+      img.src = u;
+    });
+  }
+  $('f_file').addEventListener('change', async function(){
+    var f = this.files[0]; if (!f) return;
+    try { pendingPhoto = await resizeImage(f); $('f_img').src = pendingPhoto; }
+    catch(err){ toast(err.message); this.value = ''; }
+  });
+
+  $('pform').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('f_name').value.trim(); if (!name) return;
+    var p = editingId ? find('products', editingId) : null;
+    if (!p) { p = { id:'p' + Date.now().toString(36), fallbackImage:'', image:'' }; data.products.push(p); }
+    p.name = name; p.price = num($('f_price').value); p.category = $('f_cat').value;
+    p.badge = $('f_badge').value.trim(); p.badgeColor = $('f_color').value;
+    p.description = $('f_desc').value.trim(); p.visible = $('f_vis').checked;
+    if (pendingPhoto) {
+      var path = 'image/' + slug(name) + '-' + Date.now().toString(36) + '.jpg';
+      pending[path] = pendingPhoto; p.image = path;
+    }
+    $('dlg').close(); touch(); render();
+    if (!editingId) {
+      window.scrollTo(0, document.body.scrollHeight);
+      var vis = data.products.filter(function(x){ return x.visible !== false; }).length;
+      toast(vis > HOME_MAX ? 'Eklendi: “Tüm Çiçek Modelleri” sayfasında görünecek.' : 'Eklendi: ana sayfada görünecek.', 4500);
+    }
+  });
+
+  /* ---------- açılış ---------- */
+  $('repo').value = detectRepo();
+  if (!$('repo').value) $('adv').open = true;
+  try {
+    var saved = JSON.parse(localStorage.getItem(LS) || 'null');
+    if (saved && saved.token && saved.repo) {
+      $('token').value = saved.token; $('repo').value = saved.repo;
+      login(saved.token, saved.repo, true).catch(function(err){ showLoginErr(err.message); });
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
