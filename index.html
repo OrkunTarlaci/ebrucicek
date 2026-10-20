@@ -527,6 +527,7 @@
                                 <input id="dlvSurprise" type="checkbox" class="w-4 h-4 accent-forest">
                                 <span>Sürpriz teslimat (alıcıya haber vermeyin)</span>
                             </label>
+                            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Web siteniz<input type="text" name="website" tabindex="-1" autocomplete="off" class="hp-field"></label></div>
                             <p id="dlvError" class="hidden mt-4 px-4 py-3 rounded-2xl bg-blush/60 border border-blushDark text-sm font-medium" role="alert"></p>
                         </div>
 
@@ -971,7 +972,95 @@
         }, true);
 
         function openWhatsApp(message) {
-            window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message), '_blank', 'noopener');
+            orderGuard(() => { showToast("WhatsApp'a yönlendiriliyorsunuz..."); window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message), '_blank', 'noopener'); });
+        }
+
+        // ---- Spam / bot koruması
+        // Not: Site statik olduğu için bu koruma tarayıcı tarafında çalışır; sıradan bot ve art arda tıklama spamini engeller.
+        const PAGE_LOADED_AT = Date.now();
+        const GUARD = { minPageMs: 3500, challengeMinMs: 1200, maxOrders: 5, windowMs: 10 * 60 * 1000, verifyMs: 30 * 60 * 1000, lockMs: 2 * 60 * 1000, maxWrong: 3 };
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const ssGet = k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+        const ssSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
+        function guardRecent() {
+            let a = [];
+            try { a = JSON.parse(lsGet('ec_ord') || '[]'); } catch (e) {}
+            return (Array.isArray(a) ? a : []).filter(t => Date.now() - t < GUARD.windowMs);
+        }
+        const guardRecord = () => { const a = guardRecent(); a.push(Date.now()); lsSet('ec_ord', JSON.stringify(a)); };
+
+        function orderGuard(go) {
+            // 1) Bal kapanı: insan görmez, bot doldurur
+            if (Array.from(document.querySelectorAll('.hp-field')).some(i => i.value)) return;
+            // 2) Hatalı denemeler sonrası kısa kilit
+            const left = Number(lsGet('ec_lock') || 0) - Date.now();
+            if (left > 0) return showToast('Çok fazla hatalı deneme. Lütfen ' + Math.ceil(left / 60000) + ' dakika sonra tekrar deneyin.', 'warning');
+            // 3) Sayfa açılır açılmaz tıklayan botlar
+            if (Date.now() - PAGE_LOADED_AT < GUARD.minPageMs) return showToast('Lütfen birkaç saniye sonra tekrar deneyin.', 'warning');
+            // 4) Kısa sürede çok sipariş denemesi
+            if (guardRecent().length >= GUARD.maxOrders) return showToast('Kısa sürede çok fazla sipariş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.', 'warning');
+            // 5) İnsan doğrulaması (30 dakika geçerli)
+            if (Date.now() < Number(ssGet('ec_ok') || 0)) { guardRecord(); go(); return; }
+            openHumanCheck(() => { guardRecord(); go(); });
+        }
+
+        function openHumanCheck(onPass) {
+            document.getElementById('humanCheck')?.remove();
+            const FLOWERS = ['🌹', '🌷', '🌻', '🌸', '🌼', '💐', '🌺'];
+            const OTHERS = ['🚗', '🔨', '🍕', '⚽', '🎸', '📱', '🧱', '🚀', '🎲', '⏰', '🔑', '🧲'];
+            const shuffle = arr => arr.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+            const box = document.createElement('div');
+            box.id = 'humanCheck';
+            box.className = 'fixed inset-0 z-[90] bg-ink/60 flex items-center justify-center p-4';
+            box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'humanTitle');
+            const shownAt = Date.now();
+            let wrong = 0, correct = '';
+            const close = () => { box.remove(); document.removeEventListener('keydown', onKey); };
+            const onKey = e => { if (e.key === 'Escape') close(); };
+            const draw = () => {
+                const good = shuffle(FLOWERS)[0];
+                correct = good;
+                const opts = shuffle([good].concat(shuffle(OTHERS).slice(0, 3)));
+                box.innerHTML =
+                    '<div class="bg-cream rounded-3xl p-6 sm:p-7 w-full max-w-sm border border-sage shadow-soft-lg text-center">' +
+                        '<div class="w-12 h-12 rounded-2xl bg-blush mx-auto flex items-center justify-center mb-3 text-2xl">🛡️</div>' +
+                        '<h3 id="humanTitle" class="text-xl font-bold">Kısa bir güvenlik kontrolü</h3>' +
+                        '<p class="text-sm text-forestLight mt-1.5 mb-5">Robot olmadığınızı doğrulamak için <b>çiçek olanı</b> seçin.</p>' +
+                        '<div class="grid grid-cols-4 gap-2.5">' +
+                            opts.map(o => '<button type="button" data-hc="' + o + '" aria-label="' + o + '" class="aspect-square rounded-2xl bg-white border border-sage hover:border-forest hover:bg-blush/40 text-3xl transition active:scale-95">' + o + '</button>').join('') +
+                        '</div>' +
+                        '<p id="hcMsg" class="text-xs font-semibold text-rose mt-3 min-h-[1rem]" role="alert"></p>' +
+                        '<div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Web siteniz<input type="text" name="website" tabindex="-1" autocomplete="off" class="hp-field"></label></div>' +
+                        '<button type="button" data-hc-cancel class="mt-2 text-sm font-semibold text-forestLight hover:text-ink underline underline-offset-4">Vazgeç</button>' +
+                    '</div>';
+            };
+            box.addEventListener('click', e => {
+                if (e.target === box || e.target.closest('[data-hc-cancel]')) return close();
+                const b = e.target.closest('[data-hc]'); if (!b) return;
+                const msg = box.querySelector('#hcMsg');
+                if (Date.now() - shownAt < GUARD.challengeMinMs) { msg.textContent = 'Lütfen soruyu okuyup tekrar deneyin.'; return; }
+                if (Array.from(box.querySelectorAll('.hp-field')).some(i => i.value)) return close();
+                if (b.dataset.hc === correct) {
+                    ssSet('ec_ok', String(Date.now() + GUARD.verifyMs));
+                    close();
+                    onPass();
+                } else {
+                    wrong++;
+                    if (wrong >= GUARD.maxWrong) {
+                        lsSet('ec_lock', String(Date.now() + GUARD.lockMs));
+                        close();
+                        showToast('Doğrulama başarısız. Lütfen birkaç dakika sonra tekrar deneyin.', 'warning');
+                        return;
+                    }
+                    draw();
+                    box.querySelector('#hcMsg').textContent = 'Yanlış seçim, lütfen çiçeği seçin.';
+                }
+            });
+            document.addEventListener('keydown', onKey);
+            draw();
+            document.body.appendChild(box);
+            box.querySelector('[data-hc]')?.focus();
         }
 
         function showToast(message, type) {
@@ -1074,12 +1163,51 @@
         // ÜRÜNLER
         // ==========================================
         const CAT_EMOJI = { 'Gül Buketleri': '🌹', 'Tasarım Buketler': '🌻', 'Vazo & Aranjman': '🏺', 'Saksı & Vazo': '🪴', 'Çikolata & Hediye': '🍫' };
-        // İndirim yüzdesi: eski fiyat (oldPrice) güncel fiyattan yüksekse hesaplanır. Zamda oldPrice silinir, baloncuk çıkmaz.
-        const discountPct = p => {
-            const o = Number(p.oldPrice), n = Number(p.price);
-            if (!(o > 0) || !(n >= 0) || n >= o) return 0;
-            return Math.max(1, Math.round((1 - n / o) * 100));
+        // ---- İndirim modeli: item.price = normal fiyat, item.sale = { percent, ends } (ends boşsa süresiz)
+        let SERVER_OFFSET = 0; // ziyaretçinin saati yanlış olsa da sunucu saatine göre hesaplanır
+        const nowMs = () => Date.now() + SERVER_OFFSET;
+        const saleEndMs = x => { const t = Date.parse(x && x.sale && x.sale.ends); return isNaN(t) ? null : t; };
+        const saleActive = x => {
+            const s = x && x.sale;
+            if (!s || !(Number(s.percent) > 0)) return false;
+            const t = saleEndMs(x);
+            return t === null || nowMs() < t;
         };
+        const salePct = x => saleActive(x) ? Math.round(Number(x.sale.percent)) : 0;
+        const effPrice = x => saleActive(x) ? Math.max(0, Math.round(Number(x.price) * (1 - Number(x.sale.percent) / 100))) : Number(x.price);
+        const discountPct = salePct;
+        function fmtLeft(ms) {
+            const sec = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60;
+            const z = n => String(n).padStart(2, '0');
+            return d >= 1 ? d + ' gün ' + h + ' sa' : z(h) + ':' + z(m) + ':' + z(ss);
+        }
+        // Geri sayım etiketi (süreli indirimlerde)
+        function saleTimerHtml(x, cls) {
+            const t = saleEndMs(x);
+            if (!saleActive(x) || t === null) return '';
+            return '<span class="' + (cls || 'block text-[11px] font-semibold text-rose mt-1') + '" data-sale-end="' + esc(x.sale.ends) + '">⏰ ' + fmtLeft(t - nowMs()) + ' kaldı</span>';
+        }
+        // "₺110 → ₺99 / dal %10" biçiminde fiyat satırı (çiçek ve ekstralar için)
+        function priceLine(x, suffix) {
+            const pct = salePct(x), sf = suffix || '';
+            if (!pct) return fmt(x.price) + sf;
+            return '<span class="line-through opacity-70">' + fmt(x.price) + '</span> <b class="text-rose">' + fmt(effPrice(x)) + '</b>' + sf +
+                ' <span class="inline-block px-1.5 py-0.5 rounded-full bg-rose text-white text-[10px] font-bold align-middle">%' + pct + '</span>' + saleTimerHtml(x, 'block text-[11px] font-semibold text-rose mt-0.5');
+        }
+        function tickSales() {
+            let expired = false;
+            document.querySelectorAll('[data-sale-end]').forEach(el => {
+                const ms = Date.parse(el.dataset.saleEnd) - nowMs();
+                if (ms <= 0) { expired = true; return; }
+                el.textContent = '⏰ ' + fmtLeft(ms) + ' kaldı';
+            });
+            if (!expired) return;
+            renderProducts();
+            if (!document.getElementById('modelsModal').classList.contains('hidden')) renderModels();
+            refreshBuilder();
+            const p1 = visibleProducts()[0], hp = document.getElementById('heroPrice');
+            if (hp && p1) hp.textContent = fmt(effPrice(p1));
+        }
         const visibleProducts = () => productsData.filter(p => p.visible !== false);
         const productCats = () => ['Tümü'].concat(Array.from(new Set(visibleProducts().map(p => p.category).filter(Boolean))));
         const catLabel = c => (c === 'Tümü' ? '✨' : (CAT_EMOJI[c] || '🌸')) + ' ' + esc(c);
@@ -1111,8 +1239,8 @@
                     '</div>' +
                     '<div class="pt-4 border-t border-sage flex items-center justify-between gap-3">' +
                         '<div><span class="text-[11px] text-forestLight block">Fiyat</span>' +
-                            (disc ? '<span class="text-sm text-forestLight line-through block leading-tight">' + fmt(p.oldPrice) + '</span>' : '') +
-                            '<span class="font-serif text-2xl font-bold ' + (disc ? 'text-rose' : 'text-forest') + '">' + fmt(p.price) + '</span></div>' +
+                            (disc ? '<span class="text-sm text-forestLight line-through block leading-tight">' + fmt(p.price) + '</span>' : '') +
+                            '<span class="font-serif text-2xl font-bold ' + (disc ? 'text-rose' : 'text-forest') + '">' + fmt(effPrice(p)) + '</span>' + (disc ? saleTimerHtml(p) : '') + '</div>' +
                         '<button type="button" data-order="' + esc(p.id) + '" class="order-btn px-4 py-2.5 rounded-full bg-forest hover:bg-ink text-cream text-xs font-semibold transition inline-flex items-center gap-1.5 active:scale-95">' +
                             '<i data-lucide="message-circle" class="w-4 h-4 text-blush"></i><span>WhatsApp Sipariş</span>' +
                         '</button>' +
@@ -1176,10 +1304,9 @@
             if (!p) return;
             openWhatsApp(
                 'Merhaba Ebru Çiçekçilik,\n\nAşağıdaki ürünü sipariş vermek istiyorum:\n\n' +
-                'Ürün: ' + p.name + '\nFiyat: ' + fmt(p.price) + (discountPct(p) ? ' (%' + discountPct(p) + ' indirimli, eski fiyat ' + fmt(p.oldPrice) + ')' : '') + '\nKategori: ' + p.category +
+                'Ürün: ' + p.name + '\nFiyat: ' + fmt(effPrice(p)) + (salePct(p) ? ' (%' + salePct(p) + ' indirimli, normal fiyat ' + fmt(p.price) + ')' : '') + '\nKategori: ' + p.category +
                 '\n\nTeslimat adresi: \nTeslimat tarihi / saati: \nKart notu (varsa): '
             );
-            showToast("WhatsApp'a yönlendiriliyorsunuz...");
         }
 
         // ==========================================
@@ -1204,7 +1331,7 @@
                     '<div class="flex items-center gap-3 min-w-0">' +
                         '<span class="w-12 h-12 rounded-xl bg-white border border-ink/10 shrink-0 p-1">' + flowerSwatchSvg(f) + '</span>' +
                         '<div class="min-w-0"><h4 class="font-sans text-sm font-semibold leading-tight">' + esc(f.name) + '</h4>' +
-                        '<p class="text-xs text-forestLight mt-0.5">' + fmt(f.price) + ' / dal</p></div>' +
+                        '<p class="text-xs text-forestLight mt-0.5">' + priceLine(f, ' / dal') + '</p></div>' +
                     '</div>' + stemControlsHtml(f) +
                 '</div>';
             }).join('');
@@ -1230,12 +1357,13 @@
         // ---- Tüm Çiçekler paneli
         let allFlowersCat = 'Tümü';
         let allFlowersQuery = '';
-        const ALL_FLOWER_CATS = ['Tümü', 'Güller', 'Lale & Lilyum', 'Papatya & Gerbera', 'Dolgu & Yeşillik'];
+        const allFlowerCats = () => ['Tümü'].concat(Array.from(new Set(flowersCatalog.map(f => f.cat).filter(Boolean))));
 
         function renderAllFlowers() {
             const modal = document.getElementById('allFlowersModal');
             const q = allFlowersQuery.trim().toLocaleLowerCase('tr-TR');
-            document.getElementById('allFlowersCats').innerHTML = ALL_FLOWER_CATS.map(c =>
+            if (!allFlowerCats().includes(allFlowersCat)) allFlowersCat = 'Tümü';
+            document.getElementById('allFlowersCats').innerHTML = allFlowerCats().map(c =>
                 '<button type="button" data-allcat="' + esc(c) + '" aria-pressed="' + (c === allFlowersCat) + '" class="shrink-0 px-4 py-2 rounded-full text-sm ' + (c === allFlowersCat ? 'bg-forest text-cream font-semibold' : 'bg-white border border-sage hover:bg-blush/50 font-medium') + ' transition">' + esc(c) + '</button>'
             ).join('');
             const list = flowersCatalog.filter(f =>
@@ -1246,7 +1374,7 @@
                 return '<article class="bg-white rounded-3xl p-4 border ' + (c > 0 ? 'border-forest/50 ring-1 ring-forest/15' : 'border-sage') + ' shadow-soft flex flex-col items-center text-center gap-3 transition">' +
                     '<div class="w-24 h-24 rounded-2xl bg-gradient-to-b from-cream to-blush/30 border border-sage/60 p-3">' + flowerSwatchSvg(f) + '</div>' +
                     '<div><h4 class="font-sans text-sm font-semibold leading-tight">' + esc(f.name) + '</h4>' +
-                    '<p class="text-xs text-forestLight mt-1">' + esc(f.cat) + ' · ' + fmt(f.price) + ' / dal</p></div>' +
+                    '<p class="text-xs text-forestLight mt-1">' + esc(f.cat) + ' · ' + priceLine(f, ' / dal') + '</p></div>' +
                     stemControlsHtml(f) +
                 '</article>';
             }).join('') : '<p class="col-span-full text-center text-forestLight py-12">Aramanızla eşleşen çiçek bulunamadı.</p>';
@@ -1290,7 +1418,7 @@
                 const on = state.extras[e.id] > 0;
                 return '<div class="p-3.5 rounded-2xl bg-cream border ' + (on ? 'border-forest ring-1 ring-forest/20' : 'border-sage') + ' flex items-center justify-between gap-3 transition">' +
                     '<div class="min-w-0"><h4 class="font-sans text-sm font-semibold leading-tight">' + esc(e.name) + '</h4>' +
-                    '<p class="text-xs text-forestLight mt-0.5">' + fmt(e.price) + (e.desc ? ' · ' + esc(e.desc) : '') + '</p></div>' +
+                    '<p class="text-xs text-forestLight mt-0.5">' + priceLine(e) + (e.desc ? ' · ' + esc(e.desc) : '') + '</p></div>' +
                     '<button type="button" data-extra="' + e.id + '" aria-pressed="' + on + '" class="extra-btn px-4 py-2 rounded-full text-xs font-semibold transition shrink-0 ' + (on ? 'bg-forest text-cream' : 'bg-sage hover:bg-sageDark/50') + '">' + (on ? 'Eklendi ✓' : 'Ekle +') + '</button>' +
                 '</div>';
             }).join('');
@@ -1310,12 +1438,12 @@
             const parts = [];
             flowersCatalog.forEach(f => {
                 const c = state.counts[f.id] || 0;
-                if (c > 0) { flowers += c * f.price; stems += c; parts.push(c + ' adet ' + f.name); }
+                if (c > 0) { flowers += c * effPrice(f); stems += c; parts.push(c + ' adet ' + f.name); }
             });
             let extrasTotal = 0;
             const extraNames = [];
             extrasCatalog.forEach(e => {
-                if (state.extras[e.id] > 0) { extrasTotal += e.price; extraNames.push(e.name); }
+                if (state.extras[e.id] > 0) { extrasTotal += effPrice(e); extraNames.push(e.name); }
             });
             const price = stems > 0 ? flowers + extrasTotal + BASE_WRAP_FEE : 0;
             return { price, stems, parts, extraNames };
@@ -1338,6 +1466,7 @@
         function flowerSvg(f, x, y) {
             const st = '#1F2D27';
             const a = ' stroke="' + st + '" stroke-width="1.1"';
+            const t = ' stroke="' + st + '" stroke-width=".7"';
             const g0 = '<g transform="translate(' + x + ',' + y + ')">';
             const rot = (n, fn) => { let o = ''; for (let k = 0; k < n; k++) o += '<g transform="rotate(' + (k * 360 / n) + ')">' + fn(k) + '</g>'; return o; };
             switch (f.shape) {
@@ -1407,6 +1536,164 @@
                     return g0 + '<g transform="translate(0,1) scale(1.4)"><path d="M-10,-4 C-11,-17 -4,-19 0,-10 C4,-19 11,-17 10,-4 C10,8 -10,8 -10,-4Z" fill="' + f.color + '"' + a + ' stroke-linejoin="round"/><path d="M0,-10 C-3,-3 -3,3 0,6 C3,3 3,-3 0,-10Z" fill="' + f.center + '" opacity=".55"/></g></g>';
                 case 'lily':
                     return g0 + rot(6, () => '<ellipse cx="0" cy="-9" rx="4.6" ry="10" fill="' + f.color + '"' + a + '/>') + '<circle r="3.4" fill="' + f.center + '"' + a + '/></g>';
+                case 'gerbera': {
+                    const mid = mixHex(f.color, '#FFFFFF', .25), dk = mixHex(f.center, '#1F2D27', .5);
+                    return g0 + rot(16, () => '<ellipse cx="0" cy="-12.5" rx="2.5" ry="8" fill="' + f.color + '"' + t + '/>') +
+                        '<g transform="rotate(11)">' + rot(16, () => '<ellipse cx="0" cy="-9.5" rx="2.3" ry="6" fill="' + mid + '"' + t + '/>') + '</g>' +
+                        '<circle r="5.6" fill="' + f.center + '"' + a + '/><circle r="2.6" fill="' + dk + '"/></g>';
+                }
+                case 'orchid': {
+                    const mid = mixHex(f.color, f.center, .3);
+                    return g0 +
+                        '<ellipse cx="0" cy="-12" rx="5" ry="8.5" fill="' + f.color + '"' + a + '/>' +
+                        '<ellipse cx="-6.5" cy="9" rx="4" ry="8" transform="rotate(35 -6.5 9)" fill="' + f.color + '"' + a + '/>' +
+                        '<ellipse cx="6.5" cy="9" rx="4" ry="8" transform="rotate(-35 6.5 9)" fill="' + f.color + '"' + a + '/>' +
+                        '<ellipse cx="-10" cy="-3" rx="10" ry="7.2" transform="rotate(-12 -10 -3)" fill="' + mid + '"' + a + '/>' +
+                        '<ellipse cx="10" cy="-3" rx="10" ry="7.2" transform="rotate(12 10 -3)" fill="' + mid + '"' + a + '/>' +
+                        '<path d="M-3.4,1 C-6,8 6,8 3.4,1 C2,-2 -2,-2 -3.4,1Z" fill="' + f.center + '"' + a + '/><circle cy="-1.4" r="1.8" fill="#FFFFFF"' + t + '/></g>';
+                }
+                case 'anemone': {
+                    const dk = mixHex(f.center, '#1F2D27', .35);
+                    return g0 + rot(7, () => '<ellipse cx="0" cy="-10" rx="6.4" ry="9.2" fill="' + f.color + '"' + a + '/>') +
+                        '<circle r="6.2" fill="' + f.center + '"' + a + '/>' +
+                        rot(12, () => '<circle cx="0" cy="-4.2" r=".9" fill="' + dk + '"/>') + '<circle r="2.2" fill="' + dk + '"/></g>';
+                }
+                case 'poppy': {
+                    const mid = mixHex(f.color, '#FFFFFF', .18);
+                    return g0 + rot(4, () => '<circle cx="0" cy="-9" r="9.6" fill="' + f.color + '"' + a + '/>') +
+                        '<g transform="rotate(45)">' + rot(4, () => '<circle cx="0" cy="-6" r="6.4" fill="' + mid + '"' + a + '/>') + '</g>' +
+                        '<circle r="3.8" fill="' + f.center + '"' + a + '/>' + rot(10, () => '<circle cx="0" cy="-6.2" r=".9" fill="' + f.center + '"/>') + '</g>';
+                }
+                case 'cosmos':
+                    return g0 + rot(8, () => '<path d="M0,-1 C-7.5,-5 -7.5,-15 -3.2,-19.5 L0,-15.5 L3.2,-19.5 C7.5,-15 7.5,-5 0,-1Z" fill="' + f.color + '"' + a + ' stroke-linejoin="round"/>') +
+                        '<circle r="3.6" fill="' + f.center + '"' + a + '/></g>';
+                case 'blossom':
+                    return g0 + rot(5, () => '<path d="M0,-1 C-9.5,-4 -8.5,-16.5 -2.6,-18 L0,-14 L2.6,-18 C8.5,-16.5 9.5,-4 0,-1Z" fill="' + f.color + '"' + a + ' stroke-linejoin="round"/>') +
+                        rot(8, () => '<path d="M0,-1 L0,-7" stroke="' + f.center + '" stroke-width="1" stroke-linecap="round"/><circle cx="0" cy="-7.4" r="1" fill="' + f.center + '"/>') +
+                        '<circle r="2.2" fill="' + f.center + '"/></g>';
+                case 'hibiscus':
+                    return g0 + rot(5, () => '<path d="M0,0 C-9.5,-3 -12.5,-14 -5.5,-19 C-2,-21.5 2,-21.5 5.5,-19 C12.5,-14 9.5,-3 0,0Z" fill="' + f.color + '"' + a + '/>') +
+                        rot(5, () => '<path d="M0,0 C-3.2,-3 -2.4,-9 0,-11 C2.4,-9 3.2,-3 0,0Z" fill="' + f.center + '" opacity=".85"/>') +
+                        '<path d="M0,0 L3.5,-13" stroke="#E9B44C" stroke-width="1.5" stroke-linecap="round"/><circle cx="3.5" cy="-13.4" r="1.6" fill="#F6BD60"' + t + '/></g>';
+                case 'mum': {
+                    const mid = mixHex(f.color, f.center, .3), deep = mixHex(f.color, f.center, .65);
+                    return g0 + rot(22, () => '<ellipse cx="0" cy="-13" rx="1.9" ry="7.5" fill="' + f.color + '"' + t + '/>') +
+                        '<g transform="rotate(8)">' + rot(20, () => '<ellipse cx="0" cy="-9" rx="1.9" ry="6.2" fill="' + mid + '"' + t + '/>') + '</g>' +
+                        '<g transform="rotate(4)">' + rot(14, () => '<ellipse cx="0" cy="-5" rx="1.8" ry="4.2" fill="' + deep + '"' + t + '/>') + '</g>' +
+                        '<circle r="2.4" fill="' + f.center + '"' + t + '/></g>';
+                }
+                case 'iris': {
+                    const mid = mixHex(f.color, '#FFFFFF', .35);
+                    return g0 + rot(3, () => '<ellipse cx="0" cy="-10.5" rx="5.4" ry="10" fill="' + f.color + '"' + a + '/>') +
+                        '<g transform="rotate(60)">' + rot(3, () => '<ellipse cx="0" cy="-8" rx="4.2" ry="8" fill="' + mid + '"' + a + '/>') + '</g>' +
+                        rot(3, () => '<path d="M0,-2.5 L0,-11" stroke="' + f.center + '" stroke-width="2.2" stroke-linecap="round"/>') +
+                        '<circle r="2" fill="' + f.center + '"/></g>';
+                }
+                case 'gladiolus': {
+                    const fl = (cx, cy, sc, rt) => '<g transform="translate(' + cx + ',' + cy + ') rotate(' + rt + ') scale(' + sc + ')">' +
+                        rot(5, () => '<ellipse cx="0" cy="-4.8" rx="3.3" ry="5.2" fill="' + f.color + '"' + a + '/>') + '<circle r="1.7" fill="' + f.center + '"/></g>';
+                    return g0 + '<path d="M0,21 L0,-17" stroke="#6B8E78" stroke-width="1.6" stroke-linecap="round"/>' +
+                        fl(-5, 11, 1.1, -20) + fl(5, 4, 1.05, 15) + fl(-4.5, -3, 1, -15) + fl(4, -9.5, .88, 15) + fl(-1, -16.5, .72, 0) + '</g>';
+                }
+                case 'spire':
+                case 'hyacinth': {
+                    const alt = mixHex(f.color, f.center, .5), dense = f.shape === 'hyacinth';
+                    const rows = dense ? 9 : 7, dy = dense ? 3.7 : 4.9, rr = dense ? 3.3 : 3.8;
+                    let o = g0 + '<path d="M0,21 L0,-21" stroke="#6B8E78" stroke-width="1.5" stroke-linecap="round"/>';
+                    for (let k = 0; k < rows; k++) {
+                        const yy = 15 - k * dy, s = 1 - k * .06;
+                        o += '<circle cx="-3.4" cy="' + yy + '" r="' + (rr * s).toFixed(2) + '" fill="' + (k % 2 ? f.color : alt) + '"' + t + '/>' +
+                             '<circle cx="3.4" cy="' + yy + '" r="' + (rr * s).toFixed(2) + '" fill="' + (k % 2 ? alt : f.color) + '"' + t + '/>';
+                    }
+                    return o + '<circle cx="0" cy="' + (15 - rows * dy) + '" r="2" fill="' + f.color + '"' + t + '/></g>';
+                }
+                case 'baby': {
+                    const pts = [[-9,-13],[-3,-16],[5,-14],[10,-9],[-12,-5],[-5,-8],[3,-6],[11,0],[-9,4],[-2,1],[6,5],[-5,10],[2,11],[10,9],[0,-10]];
+                    return g0 + '<path d="M0,21 C0,9 -6,3 -11,-5 M0,13 C2,5 8,1 11,-7 M0,9 C-1,-1 -3,-9 -5,-15 M0,5 C3,-3 4,-9 5,-15" stroke="#6B8E78" fill="none" stroke-width="1" stroke-linecap="round"/>' +
+                        pts.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.4" fill="' + f.color + '"' + t + '/><circle cx="' + p[0] + '" cy="' + p[1] + '" r=".7" fill="' + f.center + '"/>').join('') + '</g>';
+                }
+                case 'mimosa': {
+                    const balls = [[-8,-6],[0,-10],[8,-6],[-4,0],[5,1],[-9,8],[0,9],[9,8]];
+                    return g0 + '<path d="M0,21 L0,3 M0,9 L-8,6 M0,9 L9,7" stroke="#6B8E78" stroke-width="1.1" fill="none" stroke-linecap="round"/>' +
+                        balls.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.4" fill="' + f.color + '"' + a + '/>' +
+                            [[-1.6,-1.2],[1.4,-1.8],[0,1.6],[-2,1.4],[2.2,1]].map(d => '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r=".7" fill="' + f.center + '"/>').join('')).join('') + '</g>';
+                }
+                case 'pampas':
+                    return g0 + '<path d="M0,22 L0,3" stroke="#B8A07E" stroke-width="1.4" stroke-linecap="round"/>' +
+                        [-34, -17, 0, 17, 34].map(ang => '<g transform="translate(0,5) rotate(' + ang + ')"><path d="M0,0 Q-5,-12 0,-25" fill="none" stroke="' + f.color + '" stroke-width="4" stroke-linecap="round" opacity=".92"/><path d="M0,0 Q-4,-12 0,-23" fill="none" stroke="' + f.center + '" stroke-width="1" stroke-linecap="round"/></g>').join('') + '</g>';
+                case 'fern': {
+                    let o = g0 + '<path d="M0,22 L0,-21" stroke="#4B6F58" stroke-width="1.4" stroke-linecap="round"/>';
+                    for (let k = 0; k < 7; k++) {
+                        const yy = 15 - k * 5.2, s = 1 - k * .08;
+                        o += '<ellipse cx="-4.4" cy="' + yy + '" rx="' + (2 * s).toFixed(2) + '" ry="' + (5.6 * s).toFixed(2) + '" transform="rotate(-58 -4.4 ' + yy + ')" fill="' + f.color + '"' + t + '/>' +
+                             '<ellipse cx="4.4" cy="' + yy + '" rx="' + (2 * s).toFixed(2) + '" ry="' + (5.6 * s).toFixed(2) + '" transform="rotate(58 4.4 ' + yy + ')" fill="' + f.color + '"' + t + '/>';
+                    }
+                    return o + '<ellipse cx="0" cy="-22" rx="1.6" ry="3.6" fill="' + f.color + '"' + t + '/></g>';
+                }
+                case 'ruscus': {
+                    let o = g0 + '<path d="M0,22 C1,8 -1,-6 0,-20" stroke="#4B6F58" fill="none" stroke-width="1.3" stroke-linecap="round"/>';
+                    for (let k = 0; k < 6; k++) {
+                        const yy = 15 - k * 6, side = k % 2 ? 1 : -1;
+                        o += '<ellipse cx="' + (side * 4.4) + '" cy="' + yy + '" rx="3.6" ry="6.4" transform="rotate(' + (side * 42) + ' ' + (side * 4.4) + ' ' + yy + ')" fill="' + (k % 2 ? f.color : f.center) + '"' + a + '/>';
+                    }
+                    return o + '<ellipse cx="0" cy="-21" rx="3" ry="5.4" fill="' + f.color + '"' + a + '/></g>';
+                }
+                case 'eryngium':
+                    return g0 + rot(10, () => '<path d="M0,-3 L-2.8,-21 L0,-15 L2.8,-21Z" fill="' + f.color + '"' + t + ' stroke-linejoin="round"/>') +
+                        '<ellipse cx="0" cy="-1" rx="6.2" ry="7.6" fill="' + f.center + '"' + a + '/>' +
+                        [[-2,-4],[2,-3],[0,1],[-3,2],[3,3],[0,-7]].map(d => '<circle cx="' + d[0] + '" cy="' + d[1] + '" r=".9" fill="' + f.color + '"/>').join('') + '</g>';
+                case 'celosia': {
+                    const mid = mixHex(f.color, f.center, .45);
+                    let o = g0 + '<path d="M0,22 L0,7" stroke="#6B8E78" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="0" cy="3" rx="13" ry="7.5" fill="' + mid + '"' + a + '/>';
+                    [-12, -8, -4, 0, 4, 8, 12].forEach((x, k) => {
+                        o += '<circle cx="' + x + '" cy="' + (-3 - (1 - (x / 14) * (x / 14)) * 10).toFixed(1) + '" r="5.4" fill="' + (k % 2 ? f.color : mid) + '"' + a + '/>';
+                    });
+                    return o + '</g>';
+                }
+                case 'allium': {
+                    let o = g0 + '<path d="M0,22 L0,9" stroke="#6B8E78" stroke-width="1.6" stroke-linecap="round"/><circle cx="0" cy="-3" r="13" fill="' + mixHex(f.color, '#FFFFFF', .55) + '"' + a + '/>';
+                    for (let i = 0; i < 28; i++) {
+                        const ang = i * 2.39996, rad = 11 * Math.sqrt((i + .5) / 28);
+                        o += '<circle cx="' + (rad * Math.cos(ang)).toFixed(1) + '" cy="' + (-3 + rad * Math.sin(ang)).toFixed(1) + '" r="2.2" fill="' + (i % 3 ? f.color : f.center) + '"' + t + '/>';
+                    }
+                    return o + '</g>';
+                }
+                case 'ruffle': {
+                    const mid = mixHex(f.color, f.center, .35);
+                    return g0 + rot(5, () => '<ellipse cx="0" cy="-9.5" rx="8" ry="10.5" fill="' + f.color + '"' + a + '/>') +
+                        '<g transform="rotate(36)">' + rot(5, () => '<ellipse cx="0" cy="-6" rx="5.2" ry="7" fill="' + mid + '"' + a + '/>') + '</g>' +
+                        '<circle r="3" fill="' + f.center + '"' + a + '/>' + rot(5, () => '<circle cx="0" cy="-5.2" r=".95" fill="#E9B44C"/>') + '</g>';
+                }
+                case 'dahlia': {
+                    const pt = 'M0,-1 C-5,-6 -4,-14 0,-20 C4,-14 5,-6 0,-1Z';
+                    const mid = mixHex(f.color, f.center, .4), deep = mixHex(f.color, f.center, .8);
+                    return g0 + rot(14, () => '<path d="' + pt + '" fill="' + f.color + '"' + t + ' stroke-linejoin="round"/>') +
+                        '<g transform="rotate(13) scale(.74)">' + rot(14, () => '<path d="' + pt + '" fill="' + mid + '"' + a + ' stroke-linejoin="round"/>') + '</g>' +
+                        '<g transform="rotate(5) scale(.46)">' + rot(12, () => '<path d="' + pt + '" fill="' + deep + '"' + a + ' stroke-linejoin="round"/>') + '</g>' +
+                        '<circle r="1.8" fill="' + f.center + '"/></g>';
+                }
+                case 'cotton': {
+                    const puff = (cx, cy) => '<g transform="translate(' + cx + ',' + cy + ')"><path d="M-4,4 L-2.2,-.5 L2.2,-.5 L4,4 Z" fill="' + f.center + '"' + a + '/>' +
+                        [[0,-2.6],[-3.4,-.6],[3.4,-.6],[-1.8,-4.6],[1.8,-4.6]].map(d => '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="3.8" fill="' + f.color + '"' + a + '/>').join('') + '</g>';
+                    return g0 + '<path d="M0,22 C0,12 -3,4 -8,-6 M0,13 C2,5 6,0 9,-6 M0,8 L0,-2" stroke="#8A6B4A" fill="none" stroke-width="1.4" stroke-linecap="round"/>' +
+                        puff(-8, -10) + puff(9, -10) + puff(0, -1) + '</g>';
+                }
+                case 'lotus': {
+                    const mid = mixHex(f.color, '#FFFFFF', .35);
+                    const pt = (ang, sc, col) => '<g transform="rotate(' + ang + ') scale(' + sc + ')"><path d="M0,0 C-7,-5 -6.5,-15 0,-21 C6.5,-15 7,-5 0,0Z" fill="' + col + '"' + a + ' stroke-linejoin="round"/></g>';
+                    return g0 + '<g transform="translate(0,8)">' + pt(-64, .88, mid) + pt(64, .88, mid) + pt(-34, 1, f.color) + pt(34, 1, f.color) + pt(0, 1.08, f.color) +
+                        '<ellipse cx="0" cy="-2" rx="3.2" ry="2.2" fill="' + f.center + '"' + t + '/></g></g>';
+                }
+                case 'bells': {
+                    const bell = (cx, cy) => '<g transform="translate(' + cx + ',' + cy + ')"><path d="M0,-3 L0,0" stroke="#6B8E78" stroke-width="1"/><circle cy="3" r="3.3" fill="' + f.color + '"' + a + '/><ellipse cy="5.8" rx="3.9" ry="1.5" fill="' + f.color + '"' + a + '/></g>';
+                    return g0 + '<ellipse cx="7" cy="13" rx="5" ry="11" transform="rotate(28 7 13)" fill="#A9CDB3"' + a + '/>' +
+                        '<path d="M-10,17 C-13,-7 5,-19 13,-10" fill="none" stroke="#6B8E78" stroke-width="1.5" stroke-linecap="round"/>' +
+                        bell(-11, -4) + bell(-7, -11) + bell(0, -15) + bell(7, -15) + '</g>';
+                }
+                case 'berry':
+                    return g0 + '<path d="M-2,22 C0,9 -8,1 -11,-9 M0,11 C2,1 8,-3 11,-12 M-1,3 C0,-5 0,-12 1,-18" stroke="#6B8E78" fill="none" stroke-width="1.3" stroke-linecap="round"/>' +
+                        [[-11,-10],[-7,-14],[-12,-4],[11,-13],[7.5,-8],[13,-6],[1,-19.5],[-3.4,-15],[4,-15]].map(p =>
+                            '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.7" fill="' + f.color + '"' + a + '/><circle cx="' + (p[0] - 1) + '" cy="' + (p[1] - 1.2) + '" r="1" fill="#FFFFFF" opacity=".55"/>').join('') + '</g>';
                 default:
                     return g0 +
                         '<circle cx="-8" cy="-6" r="11" fill="' + f.color + '" stroke="' + st + '" stroke-width="1.2"/>' +
@@ -1567,7 +1854,6 @@
             if (dv.sender || dv.senderPhone) msg += '\n\n*Siparişi Veren:* ' + [dv.sender, dv.senderPhone].filter(Boolean).join(' · ');
 
             openWhatsApp(msg);
-            showToast("WhatsApp'a yönlendiriliyorsunuz...");
         }
 
         // ==========================================
@@ -1612,6 +1898,8 @@
             try {
                 const res = await fetch('urunler.json?v=' + Date.now(), { cache: 'no-store' });
                 if (!res.ok) throw new Error(res.status);
+                const sd = Date.parse(res.headers.get('date') || '');
+                if (!isNaN(sd)) SERVER_OFFSET = sd - Date.now();
                 const d = await res.json();
                 const swap = (arr, next) => { if (Array.isArray(next) && next.length) arr.splice(0, arr.length, ...next); };
                 if (Array.isArray(d.products)) productsData.splice(0, productsData.length, ...d.products);
@@ -1625,7 +1913,7 @@
             if (w) w.textContent = fmt(BASE_WRAP_FEE);
             const p1 = visibleProducts()[0];
             const hp = document.getElementById('heroPrice');
-            if (hp && p1) hp.textContent = fmt(p1.price);
+            if (hp && p1) hp.textContent = fmt(effPrice(p1));
         }
 
         // ==========================================
@@ -1775,6 +2063,7 @@
             renderWraps();
             refreshBuilder();
             if (window.lucide) lucide.createIcons();
+            setInterval(tickSales, 1000);
         });
     </script>
 </body>
