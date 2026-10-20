@@ -826,7 +826,7 @@
             </div>
 
             <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-cream/60 gap-3 text-center sm:text-left">
-                <p>© <span id="year">2026</span> Ebru Çiçekçilik Botanik &amp; Tasarım Atölyesi. Tüm hakları saklıdır.</p>
+                <p>© <span id="year">2026</span> Ebru Çiçekçilik Botanik &amp; Tasarım Atölyesi. Tüm hakları saklıdır. - Orkun Tarlacı</p>
                 <p>Gizlilik Politikası • Mesafeli Satış Sözleşmesi • Teslimat Koşulları</p>
             </div>
         </div>
@@ -972,8 +972,53 @@
         }, true);
 
         function openWhatsApp(message) {
-            orderGuard(() => { showToast("WhatsApp'a yönlendiriliyorsunuz..."); window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message), '_blank', 'noopener'); });
+            orderGuard(() => {
+                const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
+                showToast("WhatsApp'a yönlendiriliyorsunuz...");
+                let w = null;
+                try { w = window.open(url, '_blank'); } catch (e) {}
+                if (w) { try { w.opener = null; } catch (e) {} }
+                else { window.location.href = url; } // pencere engellendiyse aynı sekmede aç
+                showWaFallback(url, message);
+            });
         }
+
+        // WhatsApp açılmazsa: tek dokunuşla aç / mesajı kopyala
+        function showWaFallback(url, message) {
+            document.getElementById('waFallback')?.remove();
+            const box = document.createElement('div');
+            box.id = 'waFallback';
+            box.className = 'fixed left-3 right-3 bottom-4 sm:left-auto sm:right-6 sm:w-96 z-[85] bg-forest text-cream rounded-2xl p-4 shadow-soft-lg border border-forestLight';
+            box.innerHTML = '<p class="text-sm font-semibold mb-2.5">WhatsApp açılmadı mı?</p><div class="flex flex-wrap items-center gap-2">' +
+                '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="px-4 py-2 rounded-full bg-blush text-ink text-xs font-bold">WhatsApp\'ı aç</a>' +
+                '<button type="button" data-wa-copy class="px-4 py-2 rounded-full bg-cream/15 hover:bg-cream/25 text-xs font-semibold transition">Mesajı kopyala</button>' +
+                '<button type="button" data-wa-close class="px-3 py-2 text-xs underline underline-offset-4">Kapat</button></div>';
+            box.addEventListener('click', e => {
+                if (e.target.closest('[data-wa-close]')) return box.remove();
+                if (e.target.closest('[data-wa-copy]')) {
+                    const done = () => showToast('Mesaj kopyalandı. WhatsApp\'ta sohbete yapıştırıp gönderin.');
+                    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(message).then(done, () => showToast('Kopyalanamadı, lütfen "WhatsApp\'ı aç" düğmesini kullanın.', 'warning'));
+                    else { const t = document.createElement('textarea'); t.value = message; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (er) {} t.remove(); }
+                }
+            });
+            document.body.appendChild(box);
+            setTimeout(() => box.remove(), 30000);
+        }
+
+        // ---- Sipariş mühürü: WhatsApp mesajındaki fiyatın sonradan değiştirilip değiştirilmediğini anlamak için
+        function hash53(str, seed) {
+            var h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+            for (var i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+            h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+            h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+            return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+        }
+        var ORDER_SALT = 'ec26|Ebru-Cicek|muhur|k7Qz2xV9';
+        function sealSig(b) { return hash53(ORDER_SALT + b + ORDER_SALT, 11).toString(36).toUpperCase(); }
+        function utf8ToB64Url(s) { var by = new TextEncoder().encode(s), bin = ''; by.forEach(function (x) { bin += String.fromCharCode(x); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+        function b64UrlToUtf8(b) { b = b.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; var bin = atob(b), by = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i); return new TextDecoder().decode(by); }
+        function orderSeal(payload) { var b = utf8ToB64Url(JSON.stringify(payload)); return 'EC1.' + b + '.' + sealSig(b); }
+
 
         // ---- Spam / bot koruması
         // Not: Site statik olduğu için bu koruma tarayıcı tarafında çalışır; sıradan bot ve art arda tıklama spamini engeller.
@@ -1305,7 +1350,9 @@
             openWhatsApp(
                 'Merhaba Ebru Çiçekçilik,\n\nAşağıdaki ürünü sipariş vermek istiyorum:\n\n' +
                 'Ürün: ' + p.name + '\nFiyat: ' + fmt(effPrice(p)) + (salePct(p) ? ' (%' + salePct(p) + ' indirimli, normal fiyat ' + fmt(p.price) + ')' : '') + '\nKategori: ' + p.category +
-                '\n\nTeslimat adresi: \nTeslimat tarihi / saati: \nKart notu (varsa): '
+                '\n\nTeslimat adresi: \nTeslimat tarihi / saati: \nKart notu (varsa): ' +
+                '\n\n🔒 Fiyat doğrulama kodu (lütfen silmeyin ve değiştirmeyin):\n' +
+                orderSeal({ v: 1, t: 'p', ts: Math.floor(nowMs() / 1000), id: p.id, pr: effPrice(p), np: Number(p.price), s: salePct(p) })
             );
         }
 
@@ -1435,18 +1482,18 @@
 
         function calcTotals() {
             let flowers = 0, stems = 0;
-            const parts = [];
+            const parts = [], lines = [], xlines = [];
             flowersCatalog.forEach(f => {
                 const c = state.counts[f.id] || 0;
-                if (c > 0) { flowers += c * effPrice(f); stems += c; parts.push(c + ' adet ' + f.name); }
+                if (c > 0) { flowers += c * effPrice(f); stems += c; parts.push(c + ' adet ' + f.name); lines.push([f.id, c, effPrice(f)]); }
             });
             let extrasTotal = 0;
             const extraNames = [];
             extrasCatalog.forEach(e => {
-                if (state.extras[e.id] > 0) { extrasTotal += effPrice(e); extraNames.push(e.name); }
+                if (state.extras[e.id] > 0) { extrasTotal += effPrice(e); extraNames.push(e.name); xlines.push([e.id, effPrice(e)]); }
             });
             const price = stems > 0 ? flowers + extrasTotal + BASE_WRAP_FEE : 0;
-            return { price, stems, parts, extraNames };
+            return { price, stems, parts, extraNames, lines, xlines };
         }
 
         // Önizleme için çiçek konumları (merkezden dışa doğru)
@@ -1853,6 +1900,8 @@
             if (dv.surprise) msg += '\n  • Sürpriz teslimat (alıcıya haber verilmesin)';
             if (dv.sender || dv.senderPhone) msg += '\n\n*Siparişi Veren:* ' + [dv.sender, dv.senderPhone].filter(Boolean).join(' · ');
 
+            msg += '\n\n🔒 Fiyat doğrulama kodu (lütfen silmeyin ve değiştirmeyin):\n' +
+                orderSeal({ v: 1, t: 'b', ts: Math.floor(nowMs() / 1000), f: r.lines, x: r.xlines, w: BASE_WRAP_FEE, tot: r.price });
             openWhatsApp(msg);
         }
 
