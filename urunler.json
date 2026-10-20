@@ -10,7 +10,11 @@
       "description": "Siyah çizgili modern vazoda sarı kurdele detaylı, pembe gül ve taze pembe-beyaz papatya aranjmanı.",
       "image": "image/siyah-vazoda-pembe-gul-ve-pembe-beyaz-papatyalar-vbt1609-f6de637a-1726-4e61-9deb-5b4ca50a20e2.png",
       "fallbackImage": "",
-      "visible": true
+      "visible": true,
+      "sale": {
+        "percent": 20,
+        "ends": "2026-10-20T12:47:20.329Z"
+      }
     },
     {
       "id": "p2",
@@ -387,6 +391,12 @@
       "name": "Cam Vazo",
       "price": 150,
       "desc": "Buketle uyumlu şeffaf vazo"
+    },
+    {
+      "id": "emvgk307l",
+      "name": "Yeni ekstra",
+      "price": 0,
+      "desc": ""
     }
   ],
   "wrapFee": 120
