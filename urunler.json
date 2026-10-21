@@ -4,23 +4,19 @@
       "id": "p1",
       "name": "Siyah Vazoda Pembe Gül ve Pembe Beyaz Papatyalar",
       "category": "Vazo & Aranjman",
-      "price": 133100,
+      "price": 0,
       "badge": "Çok Satan",
       "badgeColor": "bg-blush",
       "description": "Siyah çizgili modern vazoda sarı kurdele detaylı, pembe gül ve taze pembe-beyaz papatya aranjmanı.",
       "image": "image/siyah-vazoda-pembe-gul-ve-pembe-beyaz-papatyalar-vbt1609-f6de637a-1726-4e61-9deb-5b4ca50a20e2.png",
       "fallbackImage": "",
-      "visible": true,
-      "sale": {
-        "percent": 20,
-        "ends": "2026-10-20T12:47:20.329Z"
-      }
+      "visible": true
     },
     {
       "id": "p2",
       "name": "13'lü Kırmızı Gül Buketi",
       "category": "Gül Buketleri",
-      "price": 139150,
+      "price": 0,
       "badge": "Klasik & Romantik",
       "badgeColor": "bg-peach",
       "description": "Beyaz tül buket kâğıdında okaliptüs yapraklarıyla zenginleştirilmiş 13 adet taze kırmızı gül buketi.",
@@ -32,7 +28,7 @@
       "id": "p3",
       "name": "Gazete Desenli Tasarım Bukette Ayçiçekleri",
       "category": "Tasarım Buketler",
-      "price": 114950,
+      "price": 0,
       "badge": "Özel Tasarım",
       "badgeColor": "bg-lavender",
       "description": "Nostaljik gazete desenli ambalajda kurutulmuş portakal dilimleri, lavanta ve başaklarla süslü canlı ayçiçekleri.",
@@ -44,7 +40,7 @@
       "id": "p4",
       "name": "Beyaz Çizgili Bukette Kırmızı Güller ve Craspedia",
       "category": "Gül Buketleri",
-      "price": 99220,
+      "price": 0,
       "badge": "Modern Seri",
       "badgeColor": "bg-sage",
       "description": "Beyaz tasarım buket kâğıdında okaliptüs, kırmızı güller ve kırmızı craspedia toplarıyla hazırlanmış modern buket.",
@@ -57,7 +53,7 @@
       "fallbackImage": "",
       "image": "image/kirmizi-beyaz-gul-ve-pembe-kalp-kek-buke-mvfobv0w.jpg",
       "name": "Kırmızı, Beyaz Gül ve Pembe Kalp Kek Buketi",
-      "price": 77330,
+      "price": 0,
       "category": "Çikolata & Hediye",
       "badge": "indirimli",
       "badgeColor": "bg-blush",
@@ -68,7 +64,7 @@
       "id": "p6",
       "name": "Çikolata Aranjmanı Kahverengi Kutuda",
       "category": "Çikolata & Hediye",
-      "price": 151250,
+      "price": 0,
       "badge": "Tatlı Sürpriz",
       "badgeColor": "bg-peach",
       "description": "Kahverengi silindir kutuda süt, beyaz ve kırmızı çikolata kaplı toplar, fındıklı ve hindistancevizli lezzetlerden oluşan şık çikolata buketi.",
@@ -80,7 +76,7 @@
       "id": "p5",
       "name": "Pembe Buket Kağıtlı Polimer Saksıda Pembe Lilyum",
       "category": "Saksı & Vazo",
-      "price": 118580,
+      "price": 0,
       "badge": "Mis Kokulu",
       "badgeColor": "bg-blush",
       "description": "Pastel pembe ambalaj ve somon saten kurdele ile sarılmış, polimer saksıda mis kokulu pembe lilyum.",
@@ -93,7 +89,7 @@
     {
       "id": "f_rose",
       "name": "Pastel Pembe Gül",
-      "price": 26620,
+      "price": 0,
       "color": "#F5D3D9",
       "center": "#E5989B",
       "shape": "rose",
@@ -103,7 +99,7 @@
     {
       "id": "f_peony",
       "name": "Krem & Pudra Şakayık",
-      "price": 17545,
+      "price": 0,
       "color": "#FDE2E4",
       "center": "#F4B8C1",
       "shape": "peony",
@@ -113,7 +109,7 @@
     {
       "id": "f_lavender",
       "name": "Fransız Lavantası",
-      "price": 9075,
+      "price": 0,
       "color": "#C5B4E3",
       "center": "#9D84B7",
       "shape": "lavender",
@@ -123,7 +119,7 @@
     {
       "id": "f_peachrose",
       "name": "Sıcak Şeftali Gül",
-      "price": 14520,
+      "price": 0,
       "color": "#FBE0C3",
       "center": "#F2B880",
       "shape": "rose",
@@ -133,7 +129,7 @@
     {
       "id": "f_daisy",
       "name": "Pembe-Beyaz Papatya",
-      "price": 7865,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#F6BD60",
       "shape": "daisy",
@@ -143,7 +139,7 @@
     {
       "id": "f_eucalyptus",
       "name": "Gümüş Okaliptüs Dalı",
-      "price": 7260,
+      "price": 0,
       "color": "#C5D5CB",
       "center": "#84A59D",
       "shape": "leaf",
@@ -153,7 +149,7 @@
     {
       "id": "f_redrose",
       "name": "Kırmızı Gül",
-      "price": 12705,
+      "price": 0,
       "color": "#D1495B",
       "center": "#9E2A3B",
       "shape": "rose",
@@ -162,7 +158,7 @@
     {
       "id": "f_whiterose",
       "name": "Beyaz Gül",
-      "price": 12705,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#E9E2D2",
       "shape": "rose",
@@ -171,7 +167,7 @@
     {
       "id": "f_yellowrose",
       "name": "Sarı Gül",
-      "price": 12705,
+      "price": 0,
       "color": "#F9D56E",
       "center": "#E3A92F",
       "shape": "rose",
@@ -180,7 +176,7 @@
     {
       "id": "f_lilacrose",
       "name": "Lila Gül",
-      "price": 13915,
+      "price": 0,
       "color": "#D4C1EC",
       "center": "#A58DC0",
       "shape": "rose",
@@ -189,7 +185,7 @@
     {
       "id": "f_hydrangea_blue",
       "name": "Mavi Ortanca",
-      "price": 15125,
+      "price": 0,
       "color": "#A9C8EA",
       "center": "#7FA6D3",
       "shape": "ball",
@@ -198,7 +194,7 @@
     {
       "id": "f_hydrangea_pink",
       "name": "Pembe Ortanca",
-      "price": 15125,
+      "price": 0,
       "color": "#F4B8C9",
       "center": "#E58FA9",
       "shape": "ball",
@@ -207,7 +203,7 @@
     {
       "id": "f_tulip_red",
       "name": "Kırmızı Lale",
-      "price": 8470,
+      "price": 0,
       "color": "#E63946",
       "center": "#B0202D",
       "shape": "tulip",
@@ -216,7 +212,7 @@
     {
       "id": "f_tulip_pink",
       "name": "Pembe Lale",
-      "price": 8470,
+      "price": 0,
       "color": "#F4A6C0",
       "center": "#E27BA0",
       "shape": "tulip",
@@ -225,7 +221,7 @@
     {
       "id": "f_tulip_white",
       "name": "Beyaz Lale",
-      "price": 8470,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#E5E0D5",
       "shape": "tulip",
@@ -234,7 +230,7 @@
     {
       "id": "f_tulip_yellow",
       "name": "Sarı Lale",
-      "price": 8470,
+      "price": 0,
       "color": "#FFD166",
       "center": "#E8AE2D",
       "shape": "tulip",
@@ -243,7 +239,7 @@
     {
       "id": "f_lily_pink",
       "name": "Pembe Lilyum",
-      "price": 15730,
+      "price": 0,
       "color": "#F4A6C0",
       "center": "#E5989B",
       "shape": "lily",
@@ -252,7 +248,7 @@
     {
       "id": "f_lily_white",
       "name": "Beyaz Lilyum",
-      "price": 15730,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#F2D388",
       "shape": "lily",
@@ -261,7 +257,7 @@
     {
       "id": "f_orchid",
       "name": "Beyaz Orkide",
-      "price": 19360,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#C77DFF",
       "shape": "lily",
@@ -270,7 +266,7 @@
     {
       "id": "f_alstro",
       "name": "Alstromeria",
-      "price": 8470,
+      "price": 0,
       "color": "#F28482",
       "center": "#F6BD60",
       "shape": "lily",
@@ -279,7 +275,7 @@
     {
       "id": "f_gerbera_pink",
       "name": "Pembe Gerbera",
-      "price": 10285,
+      "price": 0,
       "color": "#FF8FA3",
       "center": "#5C3D2E",
       "shape": "daisy",
@@ -288,7 +284,7 @@
     {
       "id": "f_gerbera_orange",
       "name": "Turuncu Gerbera",
-      "price": 10285,
+      "price": 0,
       "color": "#F9A65A",
       "center": "#5C3D2E",
       "shape": "daisy",
@@ -297,7 +293,7 @@
     {
       "id": "f_sunflower",
       "name": "Ayçiçeği",
-      "price": 10890,
+      "price": 0,
       "color": "#F6BD60",
       "center": "#6B4423",
       "shape": "sun",
@@ -306,7 +302,7 @@
     {
       "id": "f_carnation_pink",
       "name": "Pembe Karanfil",
-      "price": 7260,
+      "price": 0,
       "color": "#F29EBB",
       "center": "#D9708F",
       "shape": "carn",
@@ -315,7 +311,7 @@
     {
       "id": "f_carnation_red",
       "name": "Kırmızı Karanfil",
-      "price": 7260,
+      "price": 0,
       "color": "#D64550",
       "center": "#A02832",
       "shape": "carn",
@@ -324,7 +320,7 @@
     {
       "id": "f_gypsophila",
       "name": "Cipso (Gypsophila)",
-      "price": 6655,
+      "price": 0,
       "color": "#FFFFFF",
       "center": "#E6E1D8",
       "shape": "ball",
@@ -333,7 +329,7 @@
     {
       "id": "f_craspedia",
       "name": "Craspedia (Sarı Top)",
-      "price": 8470,
+      "price": 0,
       "color": "#F7C948",
       "center": "#DDA520",
       "shape": "ball",
@@ -342,7 +338,7 @@
     {
       "id": "f_freesia",
       "name": "Frezya",
-      "price": 7865,
+      "price": 0,
       "color": "#FFE066",
       "center": "#F2B705",
       "shape": "freesia",
@@ -351,7 +347,7 @@
     {
       "id": "f_wheat",
       "name": "Kuru Başak",
-      "price": 6050,
+      "price": 0,
       "color": "#D9B382",
       "center": "#B98B53",
       "shape": "wheat",
@@ -360,7 +356,7 @@
     {
       "id": "f_aspidistra",
       "name": "Aspidistra Yaprağı",
-      "price": 4840,
+      "price": 0,
       "color": "#7FA88A",
       "center": "#52796F",
       "shape": "blade",
@@ -371,25 +367,25 @@
     {
       "id": "e_chocolate",
       "name": "Premium Belçika Çikolatası",
-      "price": 30250,
+      "price": 0,
       "desc": "Butik kutu içinde"
     },
     {
       "id": "e_teddy",
       "name": "Mini Peluş Ayıcık",
-      "price": 21780,
+      "price": 0,
       "desc": "Sevimli ve yumuşak"
     },
     {
       "id": "e_balloon",
       "name": "Pastel Renkli Balon",
-      "price": 6050,
+      "price": 0,
       "desc": "Helyumlu, 1 adet"
     },
     {
       "id": "e_vase",
       "name": "Cam Vazo",
-      "price": 18150,
+      "price": 0,
       "desc": "Buketle uyumlu şeffaf vazo"
     },
     {
