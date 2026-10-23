@@ -83,6 +83,18 @@
       "image": "image/pembe-buket-kagitli-polimer-saksida-pembe-lilyum-at6316-8010772e-dca2-41e6-954a-66fe66cf834f.webp",
       "fallbackImage": "",
       "visible": true
+    },
+    {
+      "id": "pmvkqx4kz",
+      "fallbackImage": "",
+      "image": "image/desenli-kutuda-54-lu-sutlu-gurme-lezzetl-mvkqx4kz.jpg",
+      "name": "Desenli Kutuda 54'lü Sütlü Gurme Lezzetler 732g",
+      "price": 879,
+      "category": "Çikolata & Hediye",
+      "badge": "Çikolata",
+      "badgeColor": "bg-blush",
+      "description": "Özel günlerinizi daha da anlamlı kılacak ve sevdiklerinize eşsiz bir lezzet deneyimi sunacak bir hediye mi arıyorsunuz? Desenli Kutuda 54'lü Sütlü Gurme Lezzetler, her biri özenle seçilmiş çikolataların yer aldığı görsel ve tat anlamında unutulmaz bir deneyim sunuyor. Şık ve zarif tasarımıyla dikkat çeken desenli kutu, göz alıcı görüntüsü kadar içerisindeki lezzetlerle de damaklarda iz bırakıyor.",
+      "visible": true
     }
   ],
   "flowers": [
