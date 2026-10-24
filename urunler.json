@@ -1558,6 +1558,17 @@
       "center": "#5F9477",
       "shape": "blade",
       "cat": "Dolgu & Yeşillik"
+    },
+    {
+      "id": "fmvm80rh8u1j",
+      "name": "gül",
+      "variety": "botanik",
+      "price": 90,
+      "cat": "Güller",
+      "color": "#d1303f",
+      "center": "#96232d",
+      "shape": "rose",
+      "photo": "image/flowers/gul-mvm80rh8.webp"
     }
   ],
   "extras": [
