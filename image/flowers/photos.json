@@ -1,0 +1,4 @@
+{
+  "_readme": "Çiçek id -> fotoğraf eşlemesi. Dosyalar bu klasörde durur. Eklemek için: python3 tools/add-flower-photo.py <çiçek_id> <foto.jpg> --credit '...' --license '...' --source-url '...'",
+  "photos": {}
+}
