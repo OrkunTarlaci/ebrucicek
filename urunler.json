@@ -335,6 +335,16 @@
       "shape": "carn",
       "cat": "Papatya & Gerbera",
       "main": true
+    },
+    {
+      "id": "f_yesil_kasimpati",
+      "name": "Yeşil Kasımpatı",
+      "variety": "",
+      "price": 75,
+      "color": "#C9E4A8",
+      "center": "#8DB562",
+      "shape": "mum",
+      "cat": "Papatya & Gerbera"
     }
   ],
   "extras": [
