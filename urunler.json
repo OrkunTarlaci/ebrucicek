@@ -335,6 +335,16 @@
       "shape": "carn",
       "cat": "Papatya & Gerbera",
       "main": true
+    },
+    {
+      "id": "f_pamuk_cicegi",
+      "name": "Pamuk Çiçeği",
+      "variety": "",
+      "price": 85,
+      "color": "#FFFFFF",
+      "center": "#8A6B4A",
+      "shape": "cotton",
+      "cat": "Dolgu & Yeşillik"
     }
   ],
   "extras": [
