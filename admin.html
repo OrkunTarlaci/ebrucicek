@@ -303,11 +303,11 @@
   body{position:relative;width:100%;max-width:100%}
   nav,.chips{touch-action:pan-x pan-y;overscroll-behavior-x:contain;max-width:100%;min-width:0}
 
-  /* Menü (sekmeler) ortada: geniş ekranda ortalanır, dar ekranda kendi içinde kayar */
-  #tabs{justify-content:flex-start;gap:10px;padding:16px}
-  #tabs button:first-child{margin-left:auto}
-  #tabs button:last-child{margin-right:auto}
-  @media(min-width:900px){#tabs{max-width:980px;margin:0 auto;padding:18px 16px}}
+  /* Menü (sekmeler) ortada: sığmazsa alt satıra geçer, yana kaymaz */
+  #tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:16px;overflow-x:visible;max-width:980px;margin:0 auto}
+  #tabs button{margin:0;flex:0 0 auto}
+  #tabs button:first-child,#tabs button:last-child{margin:0}
+  @media(max-width:620px){#tabs{padding:12px;gap:8px}#tabs button{padding:10px 14px;font-size:15px}}
 </style>
 </head>
 <body>
