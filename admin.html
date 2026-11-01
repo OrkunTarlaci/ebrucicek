@@ -255,6 +255,8 @@
   .vrow .vprice small{display:block;font-weight:400;font-size:12px;color:var(--soft)}
   .vwrapl{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:15px}.vwrapl input{width:auto}
   .vtab{width:100%;border-collapse:collapse;margin-top:10px;background:#fff;border-radius:12px;overflow:hidden}
+  .vcode{font-family:ui-monospace,Consolas,monospace;font-size:24px;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:14px;font-weight:700}
+  .vcode::placeholder{letter-spacing:.12em;color:#C9C4B8}
   .vtab td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:15px}.vtab td:last-child{text-align:right;font-weight:700}
   .steps{font-size:15px;color:var(--soft);padding-left:20px;margin:8px 0}
 
@@ -723,7 +725,9 @@
     if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S') && !$('app').hidden) { e.preventDefault(); save(); }
   });
 
-  // ---- Sipariş mühürü: WhatsApp mesajındaki fiyatın sonradan değiştirilip değiştirilmediğini anlamak için
+  // ---- Kısa sipariş kodu (13 karakter, örn. 7K2M-9QXA-4FH2B). Her WhatsApp tıklamasında yeni kod üretilir.
+  // Kodun içinde sipariş zamanı (dakika), toplam tutar ve sipariş türü gizlidir; 15 bitlik imza sayesinde
+  // değiştirilmiş ya da uydurulmuş kodu yönetim paneli "geçersiz" bulur. Aynı kod yönetim panelinde de çözülür.
   function hash53(str, seed) {
       var h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
       for (var i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
@@ -732,18 +736,34 @@
       return 4294967296 * (2097151 & h2) + (h1 >>> 0);
   }
   var ORDER_SALT = 'ec26|Ebru-Cicek|muhur|k7Qz2xV9';
-  function sealSig(b) { return hash53(ORDER_SALT + b + ORDER_SALT, 11).toString(36).toUpperCase(); }
-  function utf8ToB64Url(s) { var by = new TextEncoder().encode(s), bin = ''; by.forEach(function (x) { bin += String.fromCharCode(x); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
-  function b64UrlToUtf8(b) { b = b.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; var bin = atob(b), by = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i); return new TextDecoder().decode(by); }
-  function orderSeal(payload) { var b = utf8ToB64Url(JSON.stringify(payload)); return 'EC1.' + b + '.' + sealSig(b); }
-
-  var NO_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  function orderNoCheck(r) {
-      var n = hash53(ORDER_SALT + 'no|' + r, 7) % 1048576, o = '';
-      for (var i = 0; i < 4; i++) { o = NO_ALPHA.charAt(n % 32) + o; n = Math.floor(n / 32); }
-      return o;
+  var NO_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0/O, 1/I gibi karışan karakterler yok
+  var CODE_EPOCH = Date.UTC(2026, 0, 1), CODE_M50 = (BigInt(1) << BigInt(50)) - BigInt(1);
+  function codeSig(body) { return hash53(ORDER_SALT + 'c|' + body.toString(36), 13) % 32768; }
+  function codeMask(sig) { return BigInt(hash53(ORDER_SALT + 'm|' + sig, 5)) & CODE_M50; }
+  // Kodu çözer: null (biçim hatalı) | { ok:false } (imza tutmuyor) | { ok:true, ms, total, type }
+  function readOrderCode(str) {
+      var s = String(str || '').toUpperCase().replace(/[\s\-–—._]/g, '');
+      if (s.length !== 13) return null;
+      var v = BigInt(0);
+      for (var i = 0; i < 13; i++) { var k = NO_ALPHA.indexOf(s.charAt(i)); if (k < 0) return null; v = (v << BigInt(5)) | BigInt(k); }
+      var sig = Number(v >> BigInt(50)), body = (v & CODE_M50) ^ codeMask(sig);
+      if (sig >= 32768 || codeSig(body) !== sig) return { ok: false };
+      return { ok: true, ms: CODE_EPOCH + Number(body >> BigInt(26)) * 60000, total: Number((body >> BigInt(6)) & BigInt(1048575)), type: (body >> BigInt(5)) & BigInt(1) ? 'b' : 'p' };
   }
-  function validOrderNo(no) { return /^[A-HJ-NP-Z2-9]{12}$/.test(no) && orderNoCheck(no.slice(0, 8)) === no.slice(8); }
+
+  /* eski uzun kod (EC1.….…): bu güncellemeden önce gönderilmiş siparişler için */
+  function sealSig(b) { return hash53(ORDER_SALT + b + ORDER_SALT, 11).toString(36).toUpperCase(); }
+  function b64UrlToUtf8(b) { b = b.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; var bin = atob(b), by = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i); return new TextDecoder().decode(by); }
+  function readLegacySeal(str) {
+    var m = /EC1\.([A-Za-z0-9_-]+)\.([A-Z0-9]+)/.exec(String(str || ''));
+    if (!m) return null;
+    if (sealSig(m[1]) !== m[2]) return { ok: false };
+    try {
+      var d = JSON.parse(b64UrlToUtf8(m[1]));
+      return { ok: true, ms: d.ts * 1000, total: d.t === 'b' ? d.tot : d.pr, type: d.t === 'b' ? 'b' : 'p', legacy: d };
+    } catch (e) { return { ok: false }; }
+  }
+
 
 
   /* ---------- çiçek çizimleri (sitedekiyle aynı) ---------- */
@@ -1734,12 +1754,46 @@
   function viewVerify(){
     var opts = vItems().map(function(o){ return '<option value="' + esc(o.name) + '">' + o.kind + '</option>'; }).join('');
     return '<div class="head"><h2>Sipariş Doğrula</h2></div>' +
+      '<div class="card" style="margin-bottom:18px"><h3>🧾 Sipariş kodu sorgula</h3>' +
+      '<p class="hint" style="margin:6px 0 10px">WhatsApp mesajındaki <b>Sipariş Kodu</b>nu yazın (örn. 7K2M-9QXA-4FH2B). Tire ve boşluk önemli değil; eski uzun kodu da yapıştırabilirsiniz.</p>' +
+      '<input id="vcode" class="vcode" placeholder="XXXX-XXXX-XXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="2000">' +
+      '<div id="vcodeRes"></div></div>' +
+      '<h3 style="margin:0 0 6px;font-size:18px;color:var(--forestDeep)">Fiyat hesapla</h3>' +
       '<p class="hint">Müşterinin istediği <b>ürün adlarını</b> ve <b>adetlerini</b> girin; güncel fiyatlar ve toplam tutar otomatik hesaplanır. İsim yazarken liste açılır (ürünler, çiçekler ve ekstralar).</p>' +
       '<datalist id="vlist">' + opts + '</datalist>' +
       '<div class="card"><div id="vrows">' + vRowHtml() + '</div>' +
       '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-act="vadd">+ Ürün ekle</button><button class="btn light" data-act="vclear">Temizle</button></div>' +
       '<label class="vwrapl"><input type="checkbox" id="vwrap"> Ambalaj ve işçilik ücretini ekle (' + money(num(data.wrapFee)) + ')</label>' +
       '<div id="vres"></div></div>';
+  }
+  var TR_DAYS = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  function fmtFull(ms){ var d = new Date(ms); return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + TR_DAYS[d.getDay()] + ', ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+  function agoText(ms){
+    var m = Math.round((Date.now() - ms) / 60000);
+    if (m < 0) return 'gelecek bir zaman (cihaz saati yanlış olabilir)';
+    if (m < 1) return 'az önce'; if (m < 60) return m + ' dakika önce';
+    var h = Math.round(m / 60); if (h < 48) return h + ' saat önce';
+    return Math.round(h / 24) + ' gün önce';
+  }
+  function vCodeCheck(){
+    var box = $('vcodeRes'), val = $('vcode').value.trim();
+    if (!val) { box.innerHTML = ''; return; }
+    var r = /EC1\./.test(val) ? readLegacySeal(val) : readOrderCode(val);
+    if (!r) {
+      var n = val.toUpperCase().replace(/[\s\-–—._]/g, '').length;
+      box.innerHTML = n < 13 ? '<p class="hint" style="margin:10px 0 0">' + n + ' / 13 karakter…</p>'
+        : '<div class="vres bad"><h3>✗ Geçersiz kod</h3>Kod 13 karakter olmalı ve yalnızca harf/rakam içermeli (0, 1, O, I kullanılmaz). Mesajdan kopyalayıp yapıştırmayı deneyin.</div>';
+      return;
+    }
+    if (!r.ok) { box.innerHTML = '<div class="vres bad"><h3>✗ Geçersiz kod</h3>Bu kod sitemizden çıkmamış ya da üzerinde değişiklik yapılmış. Siparişi müşteriyle teyit edin.</div>'; return; }
+    var same = r.type === 'p' ? data.products.filter(function(p){ return effPrice(p) === r.total || num(p.price) === r.total; }) : [];
+    box.innerHTML = '<div class="vres ok"><h3>✓ Geçerli sipariş kodu</h3><table class="vtab">' +
+      '<tr><td>Sipariş zamanı</td><td>' + fmtFull(r.ms) + ' <small style="font-weight:400;color:var(--soft)">(' + agoText(r.ms) + ')</small></td></tr>' +
+      '<tr><td>Sipariş türü</td><td>' + (r.type === 'b' ? '💐 Kendi tasarladığı buket' : '🛍️ Hazır ürün') + '</td></tr>' +
+      '<tr><td><b>Sitede gösterilen toplam</b></td><td style="font-size:20px">' + money(r.total) + '</td></tr>' +
+      (same.length ? '<tr><td>Bu fiyattaki ürün</td><td>' + same.map(function(p){ return esc(p.name); }).join('<br>') + '</td></tr>' : '') +
+      '</table><p style="margin:10px 0 0;font-size:14.5px">WhatsApp mesajındaki tutar <b>' + money(r.total) + '</b> değilse müşteri mesajı değiştirmiş olabilir; doğru tutar budur.' +
+      (r.ms < Date.now() - 7 * 86400000 ? ' <b>Not:</b> Kod 7 günden eski; fiyatlar o tarihten beri değişmiş olabilir.' : '') + '</p></div>';
   }
   function vRecalc(){
     var rows = document.querySelectorAll('#vrows .vrow'), total = 0, lines = '', any = false;
@@ -1820,6 +1874,7 @@
 
   $('view').addEventListener('input', function(e){
     var el = e.target;
+    if (el.id === 'vcode') { vCodeCheck(); return; }
     if (el.closest('#vrows') || el.id === 'vwrap') { vRecalc(); return; }
     if (el.id === 'listSearch') { searchQ = el.value; applyFilter(); return; }
     if (el.id === 'flSearch') { flQ = el.value; flRefresh(); return; }

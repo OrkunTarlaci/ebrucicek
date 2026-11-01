@@ -1202,7 +1202,9 @@
             setTimeout(() => box.remove(), 30000);
         }
 
-        // ---- Sipariş mühürü: WhatsApp mesajındaki fiyatın sonradan değiştirilip değiştirilmediğini anlamak için
+        // ---- Kısa sipariş kodu (13 karakter, örn. 7K2M-9QXA-4FH2B). Her WhatsApp tıklamasında yeni kod üretilir.
+        // Kodun içinde sipariş zamanı (dakika), toplam tutar ve sipariş türü gizlidir; 15 bitlik imza sayesinde
+        // değiştirilmiş ya da uydurulmuş kodu yönetim paneli "geçersiz" bulur. Aynı kod yönetim panelinde de çözülür.
         function hash53(str, seed) {
             var h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
             for (var i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
@@ -1211,24 +1213,30 @@
             return 4294967296 * (2097151 & h2) + (h1 >>> 0);
         }
         var ORDER_SALT = 'ec26|Ebru-Cicek|muhur|k7Qz2xV9';
-        function sealSig(b) { return hash53(ORDER_SALT + b + ORDER_SALT, 11).toString(36).toUpperCase(); }
-        function utf8ToB64Url(s) { var by = new TextEncoder().encode(s), bin = ''; by.forEach(function (x) { bin += String.fromCharCode(x); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
-        function b64UrlToUtf8(b) { b = b.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; var bin = atob(b), by = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i); return new TextDecoder().decode(by); }
-        function orderSeal(payload) { var b = utf8ToB64Url(JSON.stringify(payload)); return 'EC1.' + b + '.' + sealSig(b); }
-
-        // ---- Kişiye özel sipariş numarası: her sipariş için yeni, 12 karakter (8 rastgele + 4 doğrulama)
         var NO_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0/O, 1/I gibi karışan karakterler yok
-        function orderNoCheck(r) {
-            var n = hash53(ORDER_SALT + 'no|' + r, 7) % 1048576, o = '';
-            for (var i = 0; i < 4; i++) { o = NO_ALPHA.charAt(n % 32) + o; n = Math.floor(n / 32); }
-            return o;
+        var CODE_EPOCH = Date.UTC(2026, 0, 1), CODE_M50 = (BigInt(1) << BigInt(50)) - BigInt(1);
+        function codeSig(body) { return hash53(ORDER_SALT + 'c|' + body.toString(36), 13) % 32768; }
+        function codeMask(sig) { return BigInt(hash53(ORDER_SALT + 'm|' + sig, 5)) & CODE_M50; }
+        // gövde (50 bit) = dakika (24) | tutar ₺ (20) | tür (1: kendi buketi) | rastgele (5)
+        function makeOrderCode(type, total, ms) {
+            var r = new Uint8Array(1);
+            try { crypto.getRandomValues(r); } catch (e) { r[0] = Math.floor(Math.random() * 256); }
+            var mins = Math.max(0, Math.min(16777215, Math.floor((ms - CODE_EPOCH) / 60000)));
+            var pr = Math.max(0, Math.min(1048575, Math.round(Number(total) || 0)));
+            var body = (BigInt(mins) << BigInt(26)) | (BigInt(pr) << BigInt(6)) | (BigInt(type === 'b' ? 1 : 0) << BigInt(5)) | BigInt(r[0] & 31);
+            var sig = codeSig(body), v = (BigInt(sig) << BigInt(50)) | (body ^ codeMask(sig)), s = '';
+            for (var i = 0; i < 13; i++) { s = NO_ALPHA.charAt(Number(v & BigInt(31))) + s; v >>= BigInt(5); }
+            return s.slice(0, 4) + '-' + s.slice(4, 8) + '-' + s.slice(8);
         }
-        function newOrderNo() {
-            var a = new Uint8Array(8), r = '', i;
-            try { (window.crypto || window.msCrypto).getRandomValues(a); }
-            catch (e) { for (i = 0; i < 8; i++) a[i] = Math.floor(Math.random() * 256); }
-            for (i = 0; i < 8; i++) r += NO_ALPHA.charAt(a[i] % 32);
-            return r + orderNoCheck(r);
+        // Kodu çözer: null (biçim hatalı) | { ok:false } (imza tutmuyor) | { ok:true, ms, total, type }
+        function readOrderCode(str) {
+            var s = String(str || '').toUpperCase().replace(/[\s\-–—._]/g, '');
+            if (s.length !== 13) return null;
+            var v = BigInt(0);
+            for (var i = 0; i < 13; i++) { var k = NO_ALPHA.indexOf(s.charAt(i)); if (k < 0) return null; v = (v << BigInt(5)) | BigInt(k); }
+            var sig = Number(v >> BigInt(50)), body = (v & CODE_M50) ^ codeMask(sig);
+            if (sig >= 32768 || codeSig(body) !== sig) return { ok: false };
+            return { ok: true, ms: CODE_EPOCH + Number(body >> BigInt(26)) * 60000, total: Number((body >> BigInt(6)) & BigInt(1048575)), type: (body >> BigInt(5)) & BigInt(1) ? 'b' : 'p' };
         }
 
 
@@ -1684,13 +1692,11 @@
         function orderProductViaWhatsApp(productId) {
             const p = productsData.find(x => x.id === productId);
             if (!p) return;
-            const orderNo = newOrderNo();
+            const code = makeOrderCode('p', effPrice(p), nowMs());
             openWhatsApp(
-                'Merhaba Ebru Çiçekçilik,\n\n🧾 *Sipariş No:* ' + orderNo + '\n\nAşağıdaki ürünü sipariş vermek istiyorum:\n\n' +
+                'Merhaba Ebru Çiçekçilik,\n\n🧾 *Sipariş Kodu:* ' + code + '\n\nAşağıdaki ürünü sipariş vermek istiyorum:\n\n' +
                 'Ürün: ' + p.name + '\nFiyat: ' + fmt(effPrice(p)) + (salePct(p) ? ' (%' + salePct(p) + ' indirimli, normal fiyat ' + fmt(p.price) + ')' : '') + '\nKategori: ' + p.category +
-                '\n\nTeslimat adresi: \nTeslimat tarihi / saati: \nKart notu (varsa): ' +
-                '\n\n🔒 Fiyat doğrulama kodu (lütfen silmeyin ve değiştirmeyin):\n' +
-                orderSeal({ v: 1, t: 'p', no: orderNo, ts: Math.floor(nowMs() / 1000), id: p.id, pr: effPrice(p), np: Number(p.price), s: salePct(p) })
+                '\n\nTeslimat adresi: \nTeslimat tarihi / saati: \nKart notu (varsa): '
             );
         }
 
@@ -2579,8 +2585,8 @@
             }
             showDeliveryError('');
 
-            const orderNo = newOrderNo();
-            let msg = 'Merhaba Ebru Çiçekçilik,\n\n🧾 *Sipariş No:* ' + orderNo + '\n\nKendi buketimi tasarladım, sipariş vermek istiyorum:\n\n*Çiçekler:*\n';
+            const code = makeOrderCode('b', r.price, nowMs());
+            let msg = 'Merhaba Ebru Çiçekçilik,\n\n🧾 *Sipariş Kodu:* ' + code + '\n\nKendi buketimi tasarladım, sipariş vermek istiyorum:\n\n*Çiçekler:*\n';
             r.parts.forEach(p => { msg += '  • ' + p + '\n'; });
             if (r.extraNames.length) {
                 msg += '\n*Hediye Ekstraları:*\n';
@@ -2597,8 +2603,6 @@
             if (dv.surprise) msg += '\n  • Sürpriz teslimat (alıcıya haber verilmesin)';
             if (dv.sender || dv.senderPhone) msg += '\n\n*Siparişi Veren:* ' + [dv.sender, dv.senderPhone].filter(Boolean).join(' · ');
 
-            msg += '\n\n🔒 Fiyat doğrulama kodu (lütfen silmeyin ve değiştirmeyin):\n' +
-                orderSeal({ v: 1, t: 'b', no: orderNo, ts: Math.floor(nowMs() / 1000), f: r.lines, x: r.xlines, w: BASE_WRAP_FEE, tot: r.price });
             openWhatsApp(msg);
         }
 
