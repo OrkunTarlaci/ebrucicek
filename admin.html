@@ -754,6 +754,12 @@
   /* eski uzun kod (EC1.….…): bu güncellemeden önce gönderilmiş siparişler için */
   function sealSig(b) { return hash53(ORDER_SALT + b + ORDER_SALT, 11).toString(36).toUpperCase(); }
   function b64UrlToUtf8(b) { b = b.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; var bin = atob(b), by = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i); return new TextDecoder().decode(by); }
+  function orderNoCheck(r) {
+    var n = hash53(ORDER_SALT + 'no|' + r, 7) % 1048576, o = '';
+    for (var i = 0; i < 4; i++) { o = NO_ALPHA.charAt(n % 32) + o; n = Math.floor(n / 32); }
+    return o;
+  }
+  function validOrderNo(no) { return /^[A-HJ-NP-Z2-9]{12}$/.test(no) && orderNoCheck(no.slice(0, 8)) === no.slice(8); }
   function readLegacySeal(str) {
     var m = /EC1\.([A-Za-z0-9_-]+)\.([A-Z0-9]+)/.exec(String(str || ''));
     if (!m) return null;
@@ -1778,9 +1784,22 @@
   function vCodeCheck(){
     var box = $('vcodeRes'), val = $('vcode').value.trim();
     if (!val) { box.innerHTML = ''; return; }
-    var r = /EC1\./.test(val) ? readLegacySeal(val) : readOrderCode(val);
+    if (/EC1\./.test(val)) return vShow(box, readLegacySeal(val));
+    /* WhatsApp mesajının tamamı yapıştırıldıysa içindeki kodu bul */
+    /* (giriş kutusu satır sonlarını sildiği için kod sonraki kelimeye yapışık gelebilir: imza/kontrol harfleri yine de doğrular) */
+    var inMsg = val.length > 20 && (/([A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{5})/.exec(val) || /Sipari[şs] No:\*?\s*([A-HJ-NP-Z2-9]{12})/.exec(val));
+    var c = (inMsg ? inMsg[1] : val).toUpperCase().replace(/[\s\-–—._]/g, '');
+    /* eski sistemin 12 karakterlik "Sipariş No"su (8 rastgele + 4 kontrol): zaman/tutar içermez */
+    if (c.length === 12 && validOrderNo(c)) {
+      box.innerHTML = '<div class="vres warn"><h3>✓ Eski sipariş numarası</h3>Bu, güncellemeden önceki sistemin 12 karakterlik <b>Sipariş No</b>’su ve gerçek (sitemizden çıkmış). ' +
+        'Ancak içinde sipariş zamanı ve tutar yoktur. Aynı WhatsApp mesajının en altındaki <b>“Fiyat doğrulama kodu”</b>nu (<b>EC1.</b> ile başlar) ya da mesajın tamamını buraya yapıştırın; tutar ve zaman görünür.</div>';
+      return;
+    }
+    var r = readOrderCode(c);
+    vShow(box, r, c.length);
+  }
+  function vShow(box, r, n){
     if (!r) {
-      var n = val.toUpperCase().replace(/[\s\-–—._]/g, '').length;
       box.innerHTML = n < 13 ? '<p class="hint" style="margin:10px 0 0">' + n + ' / 13 karakter…</p>'
         : '<div class="vres bad"><h3>✗ Geçersiz kod</h3>Kod 13 karakter olmalı ve yalnızca harf/rakam içermeli (0, 1, O, I kullanılmaz). Mesajdan kopyalayıp yapıştırmayı deneyin.</div>';
       return;
