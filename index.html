@@ -1243,7 +1243,7 @@
         // ---- Spam / bot koruması
         // Not: Site statik olduğu için bu koruma tarayıcı tarafında çalışır; sıradan bot ve art arda tıklama spamini engeller.
         const PAGE_LOADED_AT = Date.now();
-        const GUARD = { minPageMs: 3500, challengeMinMs: 1200, maxOrders: 5, windowMs: 10 * 60 * 1000, verifyMs: 30 * 60 * 1000, lockMs: 2 * 60 * 1000, maxWrong: 3 };
+        const GUARD = { minPageMs: 3500, challengeMinMs: 1200, maxOrders: 12, windowMs: 10 * 60 * 1000, verifyMs: 30 * 60 * 1000, lockMs: 2 * 60 * 1000, maxWrong: 3 };
         const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
         const ssGet = k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
@@ -1261,12 +1261,12 @@
             // 2) Hatalı denemeler sonrası kısa kilit
             const left = Number(lsGet('ec_lock') || 0) - Date.now();
             if (left > 0) return showToast('Çok fazla hatalı deneme. Lütfen ' + Math.ceil(left / 60000) + ' dakika sonra tekrar deneyin.', 'warning');
-            // 3) Sayfa açılır açılmaz tıklayan botlar
-            if (Date.now() - PAGE_LOADED_AT < GUARD.minPageMs) return showToast('Lütfen birkaç saniye sonra tekrar deneyin.', 'warning');
-            // 4) Kısa sürede çok sipariş denemesi
+            // 3) Kısa sürede çok sipariş denemesi
             if (guardRecent().length >= GUARD.maxOrders) return showToast('Kısa sürede çok fazla sipariş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.', 'warning');
-            // 5) İnsan doğrulaması (30 dakika geçerli)
-            if (Date.now() < Number(ssGet('ec_ok') || 0)) { guardRecord(); go(); return; }
+            // 4) İnsan doğrulaması (30 dakika geçerli). Sayfa açılır açılmaz tıklayan, önceki doğrulaması olsa bile
+            //    soruyu yeniden görür; sipariş engellenmez (WhatsApp'tan dönüşte sayfa yeniden yüklenip hızlı tıklanabiliyor).
+            const tooFast = Date.now() - PAGE_LOADED_AT < GUARD.minPageMs;
+            if (!tooFast && Date.now() < Number(ssGet('ec_ok') || 0)) { guardRecord(); go(); return; }
             openHumanCheck(() => { guardRecord(); go(); });
         }
 
