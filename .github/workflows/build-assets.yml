@@ -1,0 +1,34 @@
+# index.html değişince sitenin CSS'ini (Tailwind) ve ikonlarını (Lucide) yeniden üretir ve kaydeder.
+# Yönetim paneli yalnızca urunler.json ve image/ klasörünü değiştirir; bu iş onu tetiklemez.
+name: Site dosyalarını derle
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'tailwind.config.cjs', 'tools/build-assets.mjs', 'tools/tailwind.css', 'package.json', 'package-lock.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-assets
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Değişiklik varsa kaydet
+        run: |
+          if [ -n "$(git status --porcelain -- assets index.html)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets index.html
+            git commit -m "Site dosyaları derlendi (CSS + ikonlar)"
+            git pull --rebase
+            git push
+          fi

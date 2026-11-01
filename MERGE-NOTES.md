@@ -18,3 +18,9 @@
 **Gerçekçi çizimler (ikinci tur)**
 -  içinde en çok kullanılan 11 model gerçek çiçeklere yaklaştırıldı: gül, şakayık, karanfil, papatya, gerbera, ayçiçeği, yıldız çiçeği (dahlia), ortanca, lale (yandan görünüm, saplı), lilyum, orkide. Katmanlı taç yapraklar, gölge/ışık vurguları, damarlar, tohum spirali (ayçiçeği), organik çerçeve rengi.
 - Diğer 28 model (örn. süsen, glayöl, gelincik, hibiskus, lavanta, yeşillikler) henüz eski düz stilde; aynı yöntemle sırayla geliştirilebilir. Çizim  ve ’de birebir aynıdır; tüm kayıtlar aynı // alanlarıyla çizilir.
+
+**Optimizasyon ve yönetim paneli (Kasım 2026)**
+- Fotoğraflar: panelde en uzun kenar 1600 px'e küçültülüp WebP'ye çevrilir (saydam PNG korunur), bellekte Blob olarak tutulur. Kaydet'te tüm fotoğraflar + `urunler.json` Git Data API ile **tek commit** olarak yazılır: fotoğraf sayısı sınırsız, yarıda kesilirse hiçbir şey bozulmaz, `urunler.json` başka yerden değiştiyse üzerine yazılmaz. Yeni fotoğraflar `image/urunler/` ve `image/ekstralar/` altına gider.
+- Ürünlerde çoklu fotoğraf: `image` = kapak, `gallery` = ek fotoğraflar (dizi). Sitede karta tıklayınca galeri açılır; masaüstünde üzerine gelince 2. fotoğraf görünür.
+- Ayarlar → “Kullanılmayan fotoğrafları bul”: sitede adı geçmeyen fotoğrafları listeler ve tek commit ile kaldırır (git geçmişinde kalır).
+- Site artık Tailwind CDN ve tüm Lucide kütüphanesini yüklemez: `npm run build` → `assets/site.css` + `assets/icons.js` (index.html'deki `?v=` damgaları otomatik güncellenir). GitHub Actions (`.github/workflows/build-assets.yml`) index.html değişince bunu kendisi yapar.
